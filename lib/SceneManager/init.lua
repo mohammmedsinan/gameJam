@@ -98,7 +98,7 @@ function SceneManager:switch(name, transition, ...)
             _callIfExists(scene, "load")
             scene._loaded = true
         end
-        _callIfExists(scene, "enter", prev, table.unpack(args))
+        _callIfExists(scene, "enter", prev, (unpack or table.unpack)(args))
     end
 
     if transition and transition.kind ~= "none" then
