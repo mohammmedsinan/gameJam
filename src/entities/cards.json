@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "Slash",
+    "price": 30,
+    "type": "attack",
+    "description": "A swift slash that deals moderate damage to the target.",
+    "rarity": 1,
+    "stats": { "damage": 4, "manaCost": 1 }
+  },
+  {
+    "id": 2,
+    "name": "Shield Wall",
+    "price": 45,
+    "type": "defense",
+    "description": "Raise a sturdy shield, gaining armor for this turn.",
+    "rarity": 1,
+    "stats": { "armor": 5, "manaCost": 1 }
+  },
+  {
+    "id": 3,
+    "name": "Poison Dart",
+    "price": 80,
+    "type": "attack",
+    "description": "Launch a poisoned dart that deals damage and applies a lingering debuff.",
+    "rarity": 2,
+    "stats": { "damage": 3, "manaCost": 2 }
+  },
+  {
+    "id": 4,
+    "name": "Healing Light",
+    "price": 90,
+    "type": "heal",
+    "description": "Channel warm light to restore health over time.",
+    "rarity": 2,
+    "stats": { "heal": 8, "manaCost": 2 }
+  },
+  {
+    "id": 5,
+    "name": "Fireball",
+    "price": 150,
+    "type": "magic",
+    "description": "Hurl a searing ball of fire dealing heavy damage to all enemies.",
+    "rarity": 3,
+    "stats": { "damage": 12, "manaCost": 4 }
+  },
+  {
+    "id": 6,
+    "name": "Frost Nova",
+    "price": 160,
+    "type": "magic",
+    "description": "Unleash a burst of ice that freezes nearby foes in place.",
+    "rarity": 3,
+    "stats": { "damage": 6, "manaCost": 3 }
+  },
+  {
+    "id": 7,
+    "name": "Shadow Strike",
+    "price": 280,
+    "type": "attack",
+    "description": "Vanish into shadow and strike from behind, dealing devastating critical damage.",
+    "rarity": 4,
+    "stats": { "damage": 20, "manaCost": 5 }
+  },
+  {
+    "id": 8,
+    "name": "Divine Wrath",
+    "price": 500,
+    "type": "magic",
+    "description": "Call down a pillar of holy fire from the heavens, annihilating everything in its path.",
+    "rarity": 5,
+    "stats": { "damage": 35, "manaCost": 8 }
+  }
+]

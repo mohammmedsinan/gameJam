@@ -4,11 +4,13 @@ love = require("love")
 -- Scenes ----------------------------------------------------------------------
 local MenuScene = require("src/scenes/MenuScene")
 local GameScene = require("src/scenes/GameScene")
+local Shop = require("src/scenes/Shop")
 
 
 function love.load()
 	SceneManager:add("menu", setmetatable({}, MenuScene))
 	SceneManager:add("game", setmetatable({}, GameScene))
+	SceneManager:add("shop", setmetatable({}, Shop))
 	SceneManager:switch("game")
 end
 
@@ -25,6 +27,13 @@ function love.keypressed(k, s, r)
 end
 
 function love.keyreleased(k, s)
+	if k == "escape" then
+		love.event.quit();
+	end
+	if k == "w" then
+		local isFullScreen, _ = love.window.getFullscreen()
+		love.window.setFullscreen(not isFullScreen)
+	end
 	SceneManager:keyreleased(k, s)
 end
 
