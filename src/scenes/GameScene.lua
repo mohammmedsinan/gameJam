@@ -6,7 +6,6 @@ local CameraShake = require("src/utils/shake")
 local DamageNumbers = require("src/utils/damage_numbers")
 local MultAnim = require("src/utils/multi_animation")
 local CardHand = require("src/ui/CardHand")
-local json = require("src/utils/json")
 
 Player = require("src/entities/player");
 Boss = require("src/entities/boss");
@@ -20,12 +19,31 @@ local cardHand
 GameScene.__index = GameScene
 
 function GameScene:load()
-	CrTv:load()
-	chatBox:load()
-	shopper:load()
 	boss = Boss.new(bus)
 	player = Player.new(bus)
 	dmg = DamageNumbers.new();
+	CrTv:load()
+	chatBox:load()
+	shopper:load()
+	player:load()
+	if SK then
+		SK:load()
+	end
+	-- ── Card Hand ────────────────────────────────────────────────────────
+	local shopArea = shopper:getShopperScreenDetails()
+	local handArea = chatBox:getChatBoxScreenDetails()
+	cardHand = CardHand.new({
+		layout        = "nfan",
+		x             = handArea.posX + 20,
+		y             = handArea.posY + 20,
+		width         = handArea.width - 40,
+		cardWidth     = 80,
+		cardHeight    = 112,
+		onCardClicked = function(card)
+			print("[Card Clicked] " .. card.name .. " (" .. card:getRarityName() .. ")")
+		end,
+	})
+	cardHand:setCards(player:getInventoryCards())
 	shake = CameraShake.new({
 		max_offset_x = 50,
 		max_offset_y = 40,
@@ -35,35 +53,6 @@ function GameScene:load()
 		pivot_x      = 400,
 		pivot_y      = 300,
 	})
-
-	-- ── Card Hand ────────────────────────────────────────────────────────
-	local shopArea = shopper:getShopperScreenDetails()
-	cardHand = CardHand.new({
-		layout        = "fan",
-		x             = shopArea.posX + shopArea.width / 2,
-		y             = shopArea.posY + shopArea.height / 2 + 30,
-		width         = shopArea.width - 40,
-		cardWidth     = 80,
-		cardHeight    = 112,
-		onCardClicked = function(card)
-			print("[Card Clicked] " .. card.name .. " (" .. card:getRarityName() .. ")")
-		end,
-	})
-
-	-- Load cards from JSON
-	local cardsContent = love.filesystem.read("src/entities/cards.json")
-	if cardsContent then
-		local cardsData = json.decode(cardsContent)
-		if cardsData then
-			for _, entry in ipairs(cardsData) do
-				cardHand:addCard(entry)
-			end
-		end
-	end
-
-	if SK then
-		SK:load()
-	end
 end
 
 function GameScene:update(dt)
@@ -133,9 +122,9 @@ function GameScene:keypressed(key)
 			SK = nil
 		else
 			SK = SkillCheck:new({
-				successArcSize = math.rad(55),
+				successArcSize = math.rad(75),
 				greatArcSize = math.rad(12),
-				pointerSpeed = 2,
+				pointerSpeed = 7,
 				onSuccess = function()
 					print("success!")
 					shake:add_trauma(0.4)
@@ -155,6 +144,10 @@ function GameScene:keypressed(key)
 			})
 			SK:Spawn()
 		end
+	end
+	if key == "q" then
+		player:keypressed(key)
+		cardHand:setCards(player:getInventoryCards())
 	end
 end
 

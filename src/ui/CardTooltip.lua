@@ -20,7 +20,15 @@ local RARITY_COLORS = {
     { 1.00, 0.72, 0.10 },
 }
 
-local TOOLTIP_WIDTH = 180
+local _fontCache    = {}
+local function getFont(size)
+    size = math.max(8, math.floor(size))
+    if not _fontCache[size] then
+        _fontCache[size] = love.graphics.newFont(size)
+    end
+    return _fontCache[size]
+end
+
 local PADDING       = 10
 local FADE_SPEED    = 6.0
 local BG_COLOR      = { 0.08, 0.08, 0.12, 0.92 }
@@ -106,46 +114,50 @@ end
 function CardTooltip:draw()
     if not self._visible or not self._card or self._alpha <= 0.01 then return end
 
-    local card       = self._card
-    local data       = type(card.getData) == "function" and card:getData() or card
-    local font       = love.graphics.getFont()
+    local card         = self._card
+    local data         = type(card.getData) == "function" and card:getData() or card
+
+    local sw, sh       = love.graphics.getDimensions()
+    local tooltipWidth = math.max(160, math.floor(sw * 0.15))
+    local fontSize     = math.max(12, math.floor(sh * 0.022))
+    local font         = getFont(fontSize)
+    love.graphics.setFont(font)
     local fh         = font:getHeight()
 
     -- ── Compute content height ──
-    local innerW     = TOOLTIP_WIDTH - PADDING * 2
+    local innerW     = tooltipWidth - PADDING * 2
     local descLines  = wordWrap(data.description or "", font, innerW)
     local statsCount = 0
     if data.stats then
         for _ in pairs(data.stats) do statsCount = statsCount + 1 end
     end
 
-    local contentH = fh              -- name
-        + fh * 0.6                   -- rarity label
-        + 4                          -- spacing
-        + #descLines * fh            -- description
-        + 6                          -- spacing
-        + statsCount * fh            -- stats rows
-        + fh                         -- price
-        + 4                          -- bottom pad
+    local contentH = fh   -- name
+        + fh * 0.6        -- rarity label
+        + 4               -- spacing
+        + #descLines * fh -- description
+        + 6               -- spacing
+        + statsCount * fh -- stats rows
+        + fh              -- price
+        + 4               -- bottom pad
 
     local tooltipH = contentH + PADDING * 2
 
     -- ── Position (above card, clamped to screen) ──
-    local tx = self._x - TOOLTIP_WIDTH / 2
+    local tx = self._x - tooltipWidth / 2
     local ty = self._y - tooltipH - 8
-    local sw, sh = love.graphics.getDimensions()
-    tx = math.max(4, math.min(tx, sw - TOOLTIP_WIDTH - 4))
+    tx = math.max(4, math.min(tx, sw - tooltipWidth - 4))
     ty = math.max(4, ty)
 
     -- ── Background ──
     love.graphics.setColor(BG_COLOR[1], BG_COLOR[2], BG_COLOR[3], BG_COLOR[4] * self._alpha)
-    love.graphics.rectangle("fill", tx, ty, TOOLTIP_WIDTH, tooltipH, BORDER_RADIUS, BORDER_RADIUS)
+    love.graphics.rectangle("fill", tx, ty, tooltipWidth, tooltipH, BORDER_RADIUS, BORDER_RADIUS)
 
     -- Border (rarity colored)
     local rc = RARITY_COLORS[data.rarity] or { 1, 1, 1 }
     love.graphics.setColor(rc[1], rc[2], rc[3], 0.7 * self._alpha)
     love.graphics.setLineWidth(1.5)
-    love.graphics.rectangle("line", tx, ty, TOOLTIP_WIDTH, tooltipH, BORDER_RADIUS, BORDER_RADIUS)
+    love.graphics.rectangle("line", tx, ty, tooltipWidth, tooltipH, BORDER_RADIUS, BORDER_RADIUS)
     love.graphics.setLineWidth(1)
 
     -- ── Text content ──

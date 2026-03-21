@@ -47,16 +47,16 @@ local TYPE_ICONS       = {
 
 local DEFAULT_WIDTH    = 100
 local DEFAULT_HEIGHT   = 140
-local CORNER_RADIUS    = 8
-local HOVER_SCALE      = 1.18
+local CORNER_RADIUS    = 10
+local HOVER_SCALE      = 1.28
 local SELECT_SCALE     = 1.10
 local HOVER_LIFT       = 25
-local HOVER_DELAY      = 0.30 -- seconds before tooltip fires
+local HOVER_DELAY      = 0.10 -- seconds before tooltip fires
 local IDLE_FLOAT_AMP   = 2.0
-local IDLE_FLOAT_SPEED = 1.5
+local IDLE_FLOAT_SPEED = 3.5
 
 -- Spring settings
-local SPRING_STIFF     = 12
+local SPRING_STIFF     = 92
 local SPRING_DAMP      = 0.70
 
 -------------------------------------------------------------------------------
@@ -76,6 +76,15 @@ local function getShader(rarity)
 		print("[CardHandler] Failed to load shader: " .. path .. " – " .. tostring(shader))
 		return nil
 	end
+end
+
+local _fontCache = {}
+local function getFont(size)
+	size = math.max(8, math.floor(size))
+	if not _fontCache[size] then
+		_fontCache[size] = love.graphics.newFont(size)
+	end
+	return _fontCache[size]
 end
 
 -------------------------------------------------------------------------------
@@ -353,7 +362,9 @@ function CardHandler:_renderCardFace()
 	local icon = TYPE_ICONS[self.type] or "?"
 	local rc = RARITY_COLORS[self.rarity]
 	love.graphics.setColor(rc[1], rc[2], rc[3], 0.7)
-	local iconFont = love.graphics.getFont()
+	local iconFontSize = math.floor(self.height * 0.15)
+	local iconFont = getFont(iconFontSize)
+	love.graphics.setFont(iconFont)
 	local iconW = iconFont:getWidth(icon)
 	love.graphics.print(icon,
 		ox + self.width / 2 - iconW / 2,
@@ -363,7 +374,9 @@ function CardHandler:_renderCardFace()
 	love.graphics.setColor(1, 1, 1, 1)
 	local nameY = oy + artMargin + artH + 6
 	local nameText = self.name
-	local font = love.graphics.getFont()
+	local nameFontSize = math.floor(self.height * 0.11)
+	local font = getFont(nameFontSize)
+	love.graphics.setFont(font)
 	-- Truncate if too long
 	while font:getWidth(nameText) > self.width - 16 and #nameText > 3 do
 		nameText = nameText:sub(1, -2)
@@ -374,7 +387,9 @@ function CardHandler:_renderCardFace()
 	-- ── Rarity label ──
 	local rarityName = RARITY_NAMES[self.rarity] or "?"
 	love.graphics.setColor(rc[1], rc[2], rc[3], 0.9)
-	local rFont = love.graphics.getFont()
+	local rarityFontSize = math.floor(self.height * 0.08)
+	local rFont = getFont(rarityFontSize)
+	love.graphics.setFont(rFont)
 	local rnW = rFont:getWidth(rarityName)
 	local rarityY = nameY + font:getHeight() + 2
 	love.graphics.print(rarityName, ox + self.width / 2 - rnW / 2, rarityY)

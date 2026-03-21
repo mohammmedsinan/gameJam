@@ -1,0 +1,70 @@
+[
+    {
+        "id": 1,
+        "name": "Iron Gauntlets",
+        "price": 120,
+        "slot": "hands",
+        "description": "Sturdy gauntlets that increase melee damage output.",
+        "rarity": 2,
+        "stats": {
+            "damage": 3,
+            "armor": 1
+        }
+    },
+    {
+        "id": 2,
+        "name": "Mana Crystal",
+        "price": 200,
+        "slot": "accessory",
+        "description": "A pulsing crystal that reduces mana cost of all spells.",
+        "rarity": 3,
+        "stats": {
+            "manaCost": -2
+        }
+    },
+    {
+        "id": 3,
+        "name": "Shadow Cloak",
+        "price": 350,
+        "slot": "armor",
+        "description": "A cloak woven from shadows, granting evasion and critical chance.",
+        "rarity": 4,
+        "stats": {
+            "armor": 4,
+            "damage": 5
+        }
+    },
+    {
+        "id": 4,
+        "name": "Healing Amulet",
+        "price": 150,
+        "slot": "accessory",
+        "description": "Restores a small amount of health at the end of each turn.",
+        "rarity": 2,
+        "stats": {
+            "heal": 3
+        }
+    },
+    {
+        "id": 5,
+        "name": "Dragon Scale",
+        "price": 500,
+        "slot": "armor",
+        "description": "Legendary scale from an ancient dragon. Massive defense boost.",
+        "rarity": 5,
+        "stats": {
+            "armor": 12
+        }
+    },
+    {
+        "id": 6,
+        "name": "Rusty Shield",
+        "price": 40,
+        "slot": "hands",
+        "description": "A battered shield. Offers minimal protection.",
+        "rarity": 1,
+        "stats": {
+            "armor": 2
+        }
+    }
+]

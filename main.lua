@@ -5,13 +5,17 @@ love = require("love")
 local MenuScene = require("src/scenes/MenuScene")
 local GameScene = require("src/scenes/GameScene")
 local Shop = require("src/scenes/Shop")
+local SettingsScene = require("src/scenes/SettingsScene")
+local CreditsScene = require("src/scenes/CreditsScene")
 
 
 function love.load()
 	SceneManager:add("menu", setmetatable({}, MenuScene))
 	SceneManager:add("game", setmetatable({}, GameScene))
 	SceneManager:add("shop", setmetatable({}, Shop))
-	SceneManager:switch("game")
+	SceneManager:add("settings", setmetatable({}, SettingsScene))
+	SceneManager:add("credits", setmetatable({}, CreditsScene))
+	SceneManager:switch("menu")
 end
 
 function love.update(dt)
