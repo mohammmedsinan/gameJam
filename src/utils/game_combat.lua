@@ -52,10 +52,10 @@ local C                 = {
 -- ── Combat tuning ────────────────────────────────────────────────────────────
 local ATTACK_CHECKS     = 3
 local PARRY_CHECKS      = 3
-local GREAT_QUALITY     = 1.0  -- 100% base damage on great
-local SUCCESS_QUALITY   = 0.6  -- 60% base damage on success
-local ENEMY_TURN_DELAY  = 1.2  -- seconds before enemy attacks
-local RESOLUTION_DELAY  = 1.5  -- seconds before next round/encounter
+local GREAT_QUALITY     = 1.0 -- 100% base damage on great
+local SUCCESS_QUALITY   = 0.6 -- 60% base damage on success
+local ENEMY_TURN_DELAY  = 1.2 -- seconds before enemy attacks
+local RESOLUTION_DELAY  = 1.5 -- seconds before next round/encounter
 local STAGE_CLEAR_DELAY = 2.0
 local CTA_PULSE_SPEED   = 3.0
 
@@ -173,37 +173,154 @@ function combat:_loadEncounter()
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
---  Calculate card bonuses
+--  Calculate card bonuses (reads ALL new card effect types)
 -- ─────────────────────────────────────────────────────────────────────────────
 function combat:_getCardBonuses()
-    local bonuses = { attackDmg = 0, parryArmor = 0, healPerTurn = 0, magicGreatBonus = 0 }
+    local bonuses = {
+        -- Skill check modifiers
+        speedMult       = 1.0,
+        successArcMult  = 1.0,
+        greatArcMult    = 1.0,
+        extraRounds     = 0,
+        missRetryChance = 0,
+        -- Damage modifiers
+        chainMult       = 0,
+        comboMult       = 0,
+        greatDmgMult    = 0,
+        atkMult         = 1.0,
+        defMult         = 1.0,
+        lifestealPct    = 0,
+        dmgPerKill      = 0,
+        -- Defense modifiers
+        flatParryArmor  = 0,
+        reflectPct      = 0,
+        counterDmg      = 0,
+        stunReduction   = 0,
+        -- Healing
+        healPerTurn     = 0,
+        -- New effects
+        missPenalty     = 0,     -- self-damage on miss (Double Down)
+        successMult     = 1.0,   -- multiplier on success hits (Double Down)
+        hpPerKill       = 0,     -- +maxHP on kill (Bone Armor)
+        hasEchoStrike   = false, -- 3rd attack repeats best (Echo Strike)
+        hasWitchsBrew   = false, -- random heal/damage at round end
+        witchsHeal      = 0,
+        witchsPenalty   = 0,
+        witchsChance    = 0,
+        hasLastStand    = false, -- triple dmg at low HP
+        lastStandThresh = 0,
+        lastStandMult   = 1.0,
+        defSteal        = 0,     -- steal enemy def on great (Siphon Soul)
+        bleedDmg        = 0,     -- bleed damage per round
+        bleedRounds     = 0,     -- bleed duration
+        hasRetribution  = false, -- +1% dmg per 1% HP missing
+        hasResonance    = false, -- consecutive greats amplify
+        fortifyStack    = 0,     -- stacking armor per consecutive parry
+        ghostPct        = 0,     -- ghost hit % (Doppelganger)
+        hasPhoenix      = false, -- revive once per stage
+        phoenixPct      = 0,
+    }
     if not self.player then return bonuses end
+
     for _, card in ipairs(self.player:getInventoryCards()) do
-        if card.type == "attack" and card.stats and card.stats.damage then
-            bonuses.attackDmg = bonuses.attackDmg + card.stats.damage
-        elseif card.type == "defense" and card.stats and card.stats.armor then
-            bonuses.parryArmor = bonuses.parryArmor + card.stats.armor
-        elseif card.type == "heal" and card.stats and card.stats.heal then
-            bonuses.healPerTurn = bonuses.healPerTurn + card.stats.heal
-        elseif card.type == "magic" and card.stats and card.stats.damage then
-            bonuses.magicGreatBonus = bonuses.magicGreatBonus + card.stats.damage
+        local e = card.effect
+        local s = card.stats or {}
+
+        if e == "chain_mult" then
+            bonuses.chainMult = bonuses.chainMult + (s.multBonus or 0)
+        elseif e == "widen_great" then
+            bonuses.greatArcMult = bonuses.greatArcMult * (s.greatArcMult or 1)
+        elseif e == "slow_pointer" then
+            bonuses.speedMult = bonuses.speedMult * (s.speedMult or 1)
+        elseif e == "flat_parry" then
+            bonuses.flatParryArmor = bonuses.flatParryArmor + (s.armor or 0)
+        elseif e == "reflect_great" then
+            bonuses.reflectPct = bonuses.reflectPct + (s.reflectPct or 0)
+        elseif e == "lifesteal_great" then
+            bonuses.lifestealPct = bonuses.lifestealPct + (s.lifestealPct or 0)
+        elseif e == "miss_reroll" then
+            bonuses.missRetryChance = math.min(1, bonuses.missRetryChance + (s.missRetryChance or 0))
+        elseif e == "full_combo" then
+            bonuses.comboMult = bonuses.comboMult + (s.comboMult or 0)
+        elseif e == "glass_cannon" then
+            bonuses.atkMult = bonuses.atkMult * (s.atkMult or 1)
+            bonuses.defMult = bonuses.defMult * (s.defMult or 1)
+        elseif e == "heal_per_turn" then
+            bonuses.healPerTurn = bonuses.healPerTurn + (s.heal or 0)
+        elseif e == "extra_rounds" then
+            bonuses.extraRounds = bonuses.extraRounds + (s.extraRounds or 0)
+        elseif e == "great_multiplier" then
+            bonuses.greatDmgMult = bonuses.greatDmgMult + (s.greatDmgMult or 0)
+        elseif e == "counter_hit" then
+            bonuses.counterDmg = bonuses.counterDmg + (s.counterDmg or 0)
+        elseif e == "tunnel_vision" then
+            bonuses.successArcMult = bonuses.successArcMult * (s.successArcMult or 1)
+            bonuses.greatArcMult   = bonuses.greatArcMult * (s.greatArcMult or 1)
+        elseif e == "soul_harvest" then
+            bonuses.dmgPerKill = bonuses.dmgPerKill + (s.dmgPerKill or 0)
+        elseif e == "stun_parry" then
+            bonuses.stunReduction = math.min(0.9, bonuses.stunReduction + (s.stunReduction or 0))
+            -- ── New effects ──────────────────────────────────────────────────
+        elseif e == "double_down" then
+            bonuses.missPenalty = bonuses.missPenalty + (s.missPenalty or 0)
+            bonuses.successMult = bonuses.successMult * (s.successMult or 1)
+        elseif e == "bone_armor" then
+            bonuses.hpPerKill = bonuses.hpPerKill + (s.hpPerKill or 0)
+        elseif e == "echo_strike" then
+            bonuses.hasEchoStrike = true
+        elseif e == "witchs_brew" then
+            bonuses.hasWitchsBrew = true
+            bonuses.witchsHeal    = bonuses.witchsHeal + (s.healAmt or 0)
+            bonuses.witchsPenalty = bonuses.witchsPenalty + (s.penaltyAmt or 0)
+            bonuses.witchsChance  = s.chance or 0.5
+        elseif e == "last_stand" then
+            bonuses.hasLastStand    = true
+            bonuses.lastStandThresh = math.max(bonuses.lastStandThresh, s.threshold or 0.25)
+            bonuses.lastStandMult   = math.max(bonuses.lastStandMult, s.dmgMult or 3.0)
+        elseif e == "siphon_soul" then
+            bonuses.defSteal = bonuses.defSteal + (s.defSteal or 0)
+        elseif e == "overcharge" then
+            bonuses.extraRounds = bonuses.extraRounds + (s.extraRounds or 0)
+            bonuses.speedMult   = bonuses.speedMult * (s.speedMult or 1)
+        elseif e == "bleed" then
+            bonuses.bleedDmg    = bonuses.bleedDmg + (s.bleedDmg or 0)
+            bonuses.bleedRounds = math.max(bonuses.bleedRounds, s.bleedRounds or 0)
+        elseif e == "retribution" then
+            bonuses.hasRetribution = true
+        elseif e == "resonance" then
+            bonuses.hasResonance = true
+        elseif e == "fortify" then
+            bonuses.fortifyStack = bonuses.fortifyStack + (s.stackArmor or 0)
+        elseif e == "doppelganger" then
+            bonuses.ghostPct = bonuses.ghostPct + (s.ghostPct or 0)
+        elseif e == "phoenix" then
+            bonuses.hasPhoenix = true
+            bonuses.phoenixPct = math.max(bonuses.phoenixPct, s.revivePct or 0.5)
         end
     end
     return bonuses
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
---  Spawn a skill check for the current phase
+--  Spawn a skill check for the current phase (applies card mods)
 -- ─────────────────────────────────────────────────────────────────────────────
 function combat:_spawnSkillCheck()
-    local isParry = (self.state == STATE.PLAYER_PARRY)
-    local cfg     = getSkillCheckConfig(self.currentStageIdx, isParry)
+    local isParry      = (self.state == STATE.PLAYER_PARRY)
+    local cfg          = getSkillCheckConfig(self.currentStageIdx, isParry)
+    local bonuses      = self:_getCardBonuses()
 
-    local selfRef = self
-    self.SK       = SkillCheck:new({
-        successArcSize = cfg.successArcSize,
-        greatArcSize   = cfg.greatArcSize,
-        pointerSpeed   = cfg.pointerSpeed,
+    -- Apply card-based skill check mods
+    local finalSpeed   = cfg.pointerSpeed * bonuses.speedMult
+    local finalSuccess = cfg.successArcSize * bonuses.successArcMult
+    local finalGreat   = cfg.greatArcSize * bonuses.greatArcMult
+    local finalRounds  = 3 + bonuses.extraRounds
+
+    local selfRef      = self
+    self.SK            = SkillCheck:new({
+        successArcSize = finalSuccess,
+        greatArcSize   = finalGreat,
+        pointerSpeed   = finalSpeed,
+        numberOfRounds = finalRounds,
         onSuccess      = function(rounds)
             selfRef:_onSkillCheckResult("success", rounds)
         end,
@@ -222,26 +339,87 @@ function combat:_spawnSkillCheck()
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
---  Skill check result callback
+--  Skill check result callback (handles miss reroll, lifesteal, counter-hit)
 -- ─────────────────────────────────────────────────────────────────────────────
 function combat:_onSkillCheckResult(quality, rounds)
+    local bonuses = self:_getCardBonuses()
     local isParry = (self.state == STATE.PLAYER_PARRY)
-    local results = isParry and self.parryResults or self.attackResults
 
+    -- ── Miss Reroll (Lucky Coin effect) ──────────────────────────────────
+    if quality == "miss" and bonuses.missRetryChance > 0 then
+        if love.math.random() < bonuses.missRetryChance then
+            quality      = "success"
+            rounds       = 1
+            -- Show "LUCKY!" feedback
+            local bs     = self.boss:details()
+            local tx, ty = isParry and (self.player.drawX or 0) or bs.x,
+                isParry and (self.player.drawY or 0) or bs.y
+            self.dmg:spawn(tx, ty - 30, 0, "xp", { prefix = "LUCKY! " })
+        end
+    end
+
+    -- ── Double Down: self-damage on miss ──────────────────────────────────
+    if quality == "miss" and bonuses.missPenalty > 0 and self.player then
+        self.player.health = math.max(0, self.player.health - bonuses.missPenalty)
+        local px = self.player.drawX or 0
+        local py = self.player.drawY or 0
+        self.dmg:spawn(px, py, bonuses.missPenalty, "normal", { prefix = "PENALTY! " })
+    end
+
+    local results = isParry and self.parryResults or self.attackResults
     table.insert(results, { quality = quality, multiplier = rounds })
 
     -- Visual feedback
     local bs = self.boss:details()
     if not isParry then
+        -- ── Chain Mult: add bonus mult items per consecutive hit ─────────
+        local chainBonus = 0
+        if quality ~= "miss" and bonuses.chainMult > 0 then
+            -- Count consecutive non-miss hits before this one
+            local streak = 0
+            for i = #self.attackResults - 1, 1, -1 do
+                if self.attackResults[i].quality ~= "miss" then
+                    streak = streak + 1
+                else
+                    break
+                end
+            end
+            chainBonus = streak * bonuses.chainMult
+        end
+
         if quality == "great" then
             self.shake:add_trauma(1)
-            self.multAnim.spawnChain(bs.x, bs.y, { rounds, rounds, rounds }, function()
+            local multChain = {}
+            for i = 1, math.max(1, rounds) + chainBonus do
+                table.insert(multChain, rounds)
+            end
+            self.multAnim.spawnChain(bs.x, bs.y, multChain, function()
                 local dmgVal = self:_calcSingleAttack(quality, rounds)
                 self.dmg:spawn(bs.x, bs.y, math.floor(dmgVal), "crit")
+                -- ── Lifesteal on Great ────────────────────────────────────
+                if bonuses.lifestealPct > 0 and self.player then
+                    local healAmt = math.floor(dmgVal * bonuses.lifestealPct)
+                    if healAmt > 0 then
+                        self.player.health = math.min(self.player.maxHealth, self.player.health + healAmt)
+                        local px = self.player.drawX or 0
+                        local py = self.player.drawY or 0
+                        self.dmg:spawn(px, py, healAmt, "heal")
+                    end
+                end
+                -- ── Siphon Soul: steal enemy defence on Great ─────────────
+                if bonuses.defSteal > 0 and self.boss then
+                    self.boss.defence = math.max(0, (self.boss.defence or 0) - bonuses.defSteal)
+                    self.dmg:spawn(bs.x, bs.y - 20, bonuses.defSteal, "xp",
+                        { prefix = "-", suffix = " DEF" })
+                end
             end)
         elseif quality == "success" then
             self.shake:add_trauma(0.4)
-            self.multAnim.spawnChain(bs.x, bs.y, { rounds }, function()
+            local multChain = { rounds }
+            for i = 1, chainBonus do
+                table.insert(multChain, rounds)
+            end
+            self.multAnim.spawnChain(bs.x, bs.y, multChain, function()
                 local dmgVal = self:_calcSingleAttack(quality, rounds)
                 self.dmg:spawn(bs.x, bs.y, math.floor(dmgVal), "normal")
             end)
@@ -250,11 +428,25 @@ function combat:_onSkillCheckResult(quality, rounds)
             self.dmg:spawn(bs.x, bs.y, 0, "miss")
         end
     else
+        -- ── Parry feedback ───────────────────────────────────────────────
         local px = self.player.drawX or 0
         local py = self.player.drawY or 0
         if quality ~= "miss" then
             local parryVal = self:_calcSingleParry(quality, rounds)
             self.dmg:spawn(px, py, math.floor(parryVal), "shield")
+            -- ── Counter Hit: damage enemy on successful parry ────────────
+            if bonuses.counterDmg > 0 and self.boss then
+                self.boss.health = math.max(0, self.boss.health - bonuses.counterDmg)
+                self.dmg:spawn(bs.x, bs.y, bonuses.counterDmg, "normal")
+            end
+            -- ── Stun: mark great parries for stun reduction ──────────────
+            if quality == "great" and bonuses.stunReduction > 0 then
+                self._hasStunParry = true
+            end
+            -- ── Reflect: mark great parries for reflect ──────────────────
+            if quality == "great" and bonuses.reflectPct > 0 then
+                self._hasReflectParry = true
+            end
         else
             self.dmg:spawn(px, py, 0, "miss")
         end
@@ -267,25 +459,74 @@ end
 function combat:_calcSingleAttack(quality, multiplier)
     if quality == "miss" then return 0 end
     local bonuses = self:_getCardBonuses()
-    local baseDmg = (self.player and self.player.damage or 1) + bonuses.attackDmg
+    local baseDmg = (self.player and self.player.damage or 1)
     local qMult   = (quality == "great") and GREAT_QUALITY or SUCCESS_QUALITY
     local dmgVal  = baseDmg * qMult * math.max(1, multiplier)
-    if quality == "great" then
-        dmgVal = dmgVal + bonuses.magicGreatBonus * math.max(1, multiplier)
+    -- Glass Cannon
+    dmgVal        = dmgVal * bonuses.atkMult
+    -- Double Down: boost success hits
+    if quality == "success" and bonuses.successMult > 1 then
+        dmgVal = dmgVal * bonuses.successMult
+    end
+    -- Great Multiplier card
+    if quality == "great" and bonuses.greatDmgMult > 0 then
+        dmgVal = dmgVal * bonuses.greatDmgMult
+    end
+    -- Last Stand: massive boost at low HP
+    if bonuses.hasLastStand and self.player then
+        local hpPct = self.player.health / math.max(1, self.player.maxHealth)
+        if hpPct <= bonuses.lastStandThresh then
+            dmgVal = dmgVal * bonuses.lastStandMult
+        end
+    end
+    -- Retribution: +1% dmg per 1% HP missing
+    if bonuses.hasRetribution and self.player then
+        local missingPct = 1 - (self.player.health / math.max(1, self.player.maxHealth))
+        dmgVal = dmgVal * (1 + missingPct)
+    end
+    -- Resonance: consecutive great hits amplify (tracked via attackResults)
+    if bonuses.hasResonance and quality == "great" then
+        local consecutiveGreats = 0
+        for i = #self.attackResults, 1, -1 do
+            if self.attackResults[i].quality == "great" then
+                consecutiveGreats = consecutiveGreats + 1
+            else
+                break
+            end
+        end
+        if consecutiveGreats >= 1 then
+            dmgVal = dmgVal * math.pow(2, math.min(consecutiveGreats, 3))
+        end
     end
     return dmgVal
 end
 
 function combat:_calcSingleParry(quality, multiplier)
     if quality == "miss" then return 0 end
-    local bonuses = self:_getCardBonuses()
-    local baseDef = (self.player and self.player.defence or 0) + bonuses.parryArmor
-    local qMult   = (quality == "great") and GREAT_QUALITY or SUCCESS_QUALITY
-    return (baseDef + 2) * qMult * math.max(1, multiplier)
+    local bonuses  = self:_getCardBonuses()
+    local baseDef  = (self.player and self.player.defence or 0) + bonuses.flatParryArmor
+    local qMult    = (quality == "great") and GREAT_QUALITY or SUCCESS_QUALITY
+    local parryVal = (baseDef + 2) * qMult * math.max(1, multiplier)
+    -- Glass Cannon
+    parryVal       = parryVal * bonuses.defMult
+    -- Fortify: stacking armor per consecutive parry
+    if bonuses.fortifyStack > 0 then
+        local streak = 0
+        for i = #self.parryResults, 1, -1 do
+            if self.parryResults[i].quality ~= "miss" then
+                streak = streak + 1
+            else
+                break
+            end
+        end
+        parryVal = parryVal + (streak * bonuses.fortifyStack)
+    end
+    return parryVal
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
 --  After skill check despawns → advance to next check or next phase
+--  Supports: Combo King bonus, heal per turn
 -- ─────────────────────────────────────────────────────────────────────────────
 function combat:_onSkillCheckDespawn()
     self.checkIndex = self.checkIndex + 1
@@ -299,7 +540,56 @@ function combat:_onSkillCheckDespawn()
             for _, r in ipairs(self.attackResults) do
                 self.totalDamage = self.totalDamage + self:_calcSingleAttack(r.quality, r.multiplier)
             end
+            local bonuses = self:_getCardBonuses()
+            -- ── Echo Strike: 3rd check repeats best hit ──────────────────
+            if bonuses.hasEchoStrike and #self.attackResults >= 3 then
+                local bestDmg = 0
+                local bestR = nil
+                for _, r in ipairs(self.attackResults) do
+                    local d = self:_calcSingleAttack(r.quality, r.multiplier)
+                    if d > bestDmg then
+                        bestDmg = d; bestR = r
+                    end
+                end
+                if bestR then
+                    local echoDmg = self:_calcSingleAttack(bestR.quality, bestR.multiplier)
+                    self.totalDamage = self.totalDamage + echoDmg
+                    local bs = self.boss:details()
+                    self.dmg:spawn(bs.x, bs.y - 30, math.floor(echoDmg), "crit",
+                        { prefix = "ECHO! " })
+                end
+            end
+            -- ── Combo King: if ALL 3 checks hit, apply combo multiplier ──
+            if bonuses.comboMult > 0 then
+                local allHit = true
+                for _, r in ipairs(self.attackResults) do
+                    if r.quality == "miss" then
+                        allHit = false; break
+                    end
+                end
+                if allHit then
+                    self.totalDamage = self.totalDamage * bonuses.comboMult
+                    local bs = self.boss:details()
+                    self.dmg:spawn(bs.x, bs.y - 40, math.floor(self.totalDamage), "crit",
+                        { prefix = "COMBO! " })
+                end
+            end
+            -- ── Doppelganger: ghost hit at % of total ────────────────────
+            if bonuses.ghostPct > 0 then
+                local ghostDmg = math.floor(self.totalDamage * bonuses.ghostPct)
+                if ghostDmg > 0 then
+                    self.totalDamage = self.totalDamage + ghostDmg
+                    local bs = self.boss:details()
+                    self.dmg:spawn(bs.x + 20, bs.y - 10, ghostDmg, "normal",
+                        { prefix = "GHOST! " })
+                end
+            end
             self.totalDamage = math.floor(self.totalDamage)
+            -- ── Bleed: start bleed timer on boss ─────────────────────────
+            if bonuses.bleedDmg > 0 and self.totalDamage > 0 then
+                self._bleedStacks = (self._bleedStacks or 0) + bonuses.bleedDmg
+                self._bleedRoundsLeft = bonuses.bleedRounds
+            end
             -- Apply damage to boss
             if self.boss then
                 self.boss.health = math.max(0, self.boss.health - self.totalDamage)
@@ -310,9 +600,11 @@ function combat:_onSkillCheckDespawn()
                 self.resolutionTimer = 0
                 return
             end
-            -- Move to PARRY_CTA — notify player it's enemy turn, wait for space
+            -- Move to PARRY_CTA
             self.state = STATE.PARRY_CTA
             self.parryCTAPulse = 0
+            self._hasStunParry = false
+            self._hasReflectParry = false
             self:_setTurnIndicator("ENEMY INCOMING!", C.enemyTurn)
         end
     elseif self.state == STATE.PLAYER_PARRY then
@@ -332,6 +624,21 @@ function combat:_onSkillCheckDespawn()
                 local px = self.player.drawX or 0
                 local py = self.player.drawY or 0
                 self.dmg:spawn(px, py, bonuses.healPerTurn, "heal")
+            end
+            -- ── Witch's Brew: coin flip heal or hurt ─────────────────────
+            if bonuses.hasWitchsBrew and self.player then
+                local px = self.player.drawX or 0
+                local py = self.player.drawY or 0
+                if love.math.random() < bonuses.witchsChance then
+                    self.player.health = math.min(self.player.maxHealth,
+                        self.player.health + bonuses.witchsHeal)
+                    self.dmg:spawn(px, py, bonuses.witchsHeal, "heal",
+                        { prefix = "BREW! +" })
+                else
+                    self.player.health = math.max(0, self.player.health - bonuses.witchsPenalty)
+                    self.dmg:spawn(px, py, bonuses.witchsPenalty, "normal",
+                        { prefix = "BREW! " })
+                end
             end
             -- Move to enemy turn
             self.state = STATE.ENEMY_TURN
@@ -385,6 +692,31 @@ function combat:_advanceEncounter()
     local stage = self:_getCurrentStage()
     if not stage then return end
 
+    local bonuses = self:_getCardBonuses()
+    local px = self.player and self.player.drawX or 0
+    local py = self.player and self.player.drawY or 0
+
+    -- ── Soul Harvest: permanent +dmg on kill ─────────────────────────────
+    if bonuses.dmgPerKill > 0 and self.player then
+        self.player.damage = self.player.damage + bonuses.dmgPerKill
+        self.dmg:spawn(px, py, bonuses.dmgPerKill, "xp",
+            { prefix = "+", suffix = " DMG" })
+    end
+
+    -- ── Bone Armor: permanent +maxHP on kill ─────────────────────────────
+    if bonuses.hpPerKill > 0 and self.player then
+        self.player.maxHealth = self.player.maxHealth + bonuses.hpPerKill
+        self.player.health    = self.player.health + bonuses.hpPerKill
+        self.dmg:spawn(px, py - 20, bonuses.hpPerKill, "heal",
+            { prefix = "+", suffix = " MAX HP" })
+    end
+
+    -- Reset bleed stacks on kill
+    self._bleedStacks = 0
+    self._bleedRoundsLeft = 0
+    -- Reset phoenix flag per stage
+    -- (phoenix is reset only when advancing stage, see _advanceStage)
+
     if self.currentEncounterIdx < #stage.encounters then
         self.currentEncounterIdx = self.currentEncounterIdx + 1
         self:_startCombat()
@@ -403,6 +735,7 @@ function combat:_advanceStage()
     self.currentStageIdx = self.currentStageIdx + 1
     self.currentEncounterIdx = 1
     self.state = STATE.CTA
+    self._phoenixUsed = false -- reset phoenix per stage
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -477,6 +810,25 @@ function combat:_startNewRound()
     self.parryResults = {}
     self.totalDamage = 0
     self.totalParry = 0
+    -- ── Bleed: tick damage on boss at start of new round ─────────────────
+    if (self._bleedStacks or 0) > 0 and (self._bleedRoundsLeft or 0) > 0 then
+        if self.boss then
+            self.boss.health = math.max(0, self.boss.health - self._bleedStacks)
+            local bs = self.boss:details()
+            self.dmg:spawn(bs.x, bs.y, self._bleedStacks, "crit",
+                { prefix = "BLEED! " })
+        end
+        self._bleedRoundsLeft = self._bleedRoundsLeft - 1
+        if self._bleedRoundsLeft <= 0 then
+            self._bleedStacks = 0
+        end
+        -- Check if bleed killed the boss
+        if self.boss and self.boss.health <= 0 then
+            self.state = STATE.RESOLUTION
+            self.resolutionTimer = 0
+            return
+        end
+    end
     self:_setTurnIndicator("ATTACK!", C.attackText)
     self:_spawnSkillCheck()
 end
@@ -488,8 +840,16 @@ function combat:_executeEnemyAttack()
     if not self.player or not self.boss then return end
     local enc = self:_getCurrentEncounter()
     if not enc then return end
+    local bonuses = self:_getCardBonuses()
 
     local enemyAtk = enc.attack
+    -- ── Shield Bash stun: reduce enemy attack if great parry landed ──────
+    if self._hasStunParry and bonuses.stunReduction > 0 then
+        enemyAtk = math.floor(enemyAtk * (1 - bonuses.stunReduction))
+        local bs = self.boss:details()
+        self.dmg:spawn(bs.x, bs.y, 0, "xp", { prefix = "STUNNED! " })
+    end
+
     local reduction = self.totalParry
     local finalDmg = math.max(1, enemyAtk - reduction)
     self.enemyDamageDealt = finalDmg
@@ -501,8 +861,31 @@ function combat:_executeEnemyAttack()
     self.shake:add_trauma(0.6)
     self.dmg:spawn(px, py, finalDmg, "normal")
 
+    -- ── Thorns reflect: deal % of enemy damage back on great parry ───────
+    if self._hasReflectParry and bonuses.reflectPct > 0 then
+        local reflectDmg = math.floor(enemyAtk * bonuses.reflectPct)
+        if reflectDmg > 0 and self.boss then
+            self.boss.health = math.max(0, self.boss.health - reflectDmg)
+            local bs = self.boss:details()
+            self.dmg:spawn(bs.x, bs.y, reflectDmg, "crit",
+                { prefix = "REFLECT! " })
+        end
+    end
+
     if self.player.health <= 0 then
-        self.state = STATE.DEFEAT
+        -- ── Phoenix Feather: revive once per stage ───────────────────────
+        local bonuses2 = self:_getCardBonuses()
+        if bonuses2.hasPhoenix and not self._phoenixUsed then
+            self._phoenixUsed = true
+            local reviveHP = math.max(1, math.floor(self.player.maxHealth * bonuses2.phoenixPct))
+            self.player.health = reviveHP
+            self.shake:add_trauma(1)
+            self.dmg:spawn(px, py, reviveHP, "heal", { prefix = "PHOENIX! +" })
+            self.state = STATE.RESOLUTION
+            self.resolutionTimer = 0
+        else
+            self.state = STATE.DEFEAT
+        end
     else
         self.state = STATE.RESOLUTION
         self.resolutionTimer = 0

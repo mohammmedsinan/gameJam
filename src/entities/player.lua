@@ -14,7 +14,7 @@ function Player.new(bus, cardHand)
 		health = 10,
 		maxHealth = 10,
 		damage = 1,
-		attack = 1,
+		attack = 10,
 		defence = 0,
 		-- xp = 0,
 		level = 1,
@@ -33,7 +33,7 @@ function Player:load()
 	cardsData = json.decode(cardsContent)
 	if cardsData then
 		for _, card in ipairs(cardsData) do
-			if card.id == 1 then
+			if card.id == 3 then
 				self:addCardToInventory(card)
 			end
 		end

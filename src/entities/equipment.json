@@ -1,93 +1,242 @@
 [
     {
         "id": 1,
-        "name": "Iron Gauntlets",
-        "price": 120,
-        "slot": "hands",
-        "description": "Sturdy gauntlets that increase melee damage output.",
-        "rarity": 2,
+        "name": "Rusty Blade",
+        "price": 30,
+        "slot": "weapon",
+        "description": "A dull, chipped blade. Not much, but it cuts.",
+        "rarity": 1,
         "stats": {
-            "damage": 3,
-            "armor": 1
+            "damage": 2,
+            "armor": 0
         }
     },
     {
         "id": 2,
-        "name": "Mana Crystal",
-        "price": 200,
-        "slot": "accessory",
-        "description": "A pulsing crystal that reduces mana cost of all spells.",
-        "rarity": 3,
+        "name": "Bone Shield",
+        "price": 40,
+        "slot": "shield",
+        "description": "A shield made from the bones of fallen dungeon crawlers.",
+        "rarity": 1,
         "stats": {
-            "manaCost": -2
+            "damage": 0,
+            "armor": 3
         }
     },
     {
         "id": 3,
-        "name": "Shadow Cloak",
-        "price": 350,
-        "slot": "armor",
-        "description": "A cloak woven from shadows, granting evasion and critical chance.",
-        "rarity": 4,
+        "name": "Crimson Dagger",
+        "price": 100,
+        "slot": "weapon",
+        "description": "A wickedly sharp dagger that thirsts for blood.",
+        "rarity": 2,
         "stats": {
-            "armor": 4,
-            "damage": 5
+            "damage": 5,
+            "armor": 0
         }
     },
     {
         "id": 4,
-        "name": "Healing Amulet",
-        "price": 150,
-        "slot": "accessory",
-        "description": "Restores a small amount of health at the end of each turn.",
+        "name": "Dungeon Plate",
+        "price": 120,
+        "slot": "armor",
+        "description": "Heavy iron armor forged in the dungeon depths.",
         "rarity": 2,
         "stats": {
-            "heal": 3
+            "damage": 0,
+            "armor": 6
         }
     },
     {
         "id": 5,
-        "name": "Dragon Scale",
-        "price": 500,
-        "slot": "armor",
-        "description": "Legendary scale from an ancient dragon. Massive defense boost.",
-        "rarity": 5,
+        "name": "Viper Fang",
+        "price": 180,
+        "slot": "weapon",
+        "description": "A serrated blade dripping with venom. Strikes deep.",
+        "rarity": 3,
         "stats": {
-            "armor": 12
+            "damage": 8,
+            "armor": 0
         }
     },
     {
         "id": 6,
-        "name": "Rusty Shield",
-        "price": 40,
-        "slot": "hands",
-        "description": "A battered shield. Offers minimal protection.",
-        "rarity": 1,
+        "name": "Obsidian Buckler",
+        "price": 200,
+        "slot": "shield",
+        "description": "A jet-black shield that absorbs the force of impacts.",
+        "rarity": 3,
         "stats": {
-            "armor": 2
+            "damage": 1,
+            "armor": 8
         }
     },
     {
         "id": 7,
-        "name": "Swift Boots",
-        "price": 250,
+        "name": "Ring of Fury",
+        "price": 150,
         "slot": "accessory",
-        "description": "Magical boots that grant a chance to dodge attacks.",
+        "description": "A ring that pulses with rage. Boosts attack but weakens defense.",
         "rarity": 3,
         "stats": {
-            "dodge": 10
+            "damage": 10,
+            "armor": -3
         }
     },
     {
         "id": 8,
-        "name": "Cursed Ring",
-        "price": 400,
+        "name": "Amulet of the Warden",
+        "price": 160,
         "slot": "accessory",
-        "description": "A dark ring that drastically boosts damage but drains health.",
+        "description": "An ancient amulet that grants the wearer unshakable resolve.",
+        "rarity": 3,
+        "stats": {
+            "damage": 0,
+            "armor": 10
+        }
+    },
+    {
+        "id": 9,
+        "name": "Doomhammer",
+        "price": 350,
+        "slot": "weapon",
+        "description": "A massive hammer of dark iron. Devastating, but heavy.",
         "rarity": 4,
         "stats": {
             "damage": 15,
-            "heal": -2
+            "armor": -2
+        }
+    },
+    {
+        "id": 10,
+        "name": "Dragonscale Vest",
+        "price": 400,
+        "slot": "armor",
+        "description": "Armor woven from the scales of an ancient wyrm. Nearly impenetrable.",
+        "rarity": 4,
+        "stats": {
+            "damage": 2,
+            "armor": 14
+        }
+    },
+    {
+        "id": 11,
+        "name": "Phantom Cloak",
+        "price": 250,
+        "slot": "armor",
+        "description": "A cloak that flickers between realms. Makes you harder to hit.",
+        "rarity": 3,
+        "stats": {
+            "damage": 3,
+            "armor": 5
+        }
+    },
+    {
+        "id": 12,
+        "name": "The Broadcaster's Eye",
+        "price": 500,
+        "slot": "accessory",
+        "description": "A legendary artifact from the final gate. Grants godlike stats.",
+        "rarity": 5,
+        "stats": {
+            "damage": 12,
+            "armor": 12
+        }
+    },
+    {
+        "id": 13,
+        "name": "Spectral Gauntlets",
+        "price": 130,
+        "slot": "armor",
+        "description": "Ghostly gauntlets that phase through weak attacks. Light but effective.",
+        "rarity": 2,
+        "stats": {
+            "damage": 2,
+            "armor": 4
+        }
+    },
+    {
+        "id": 14,
+        "name": "Ironbark Bow",
+        "price": 90,
+        "slot": "weapon",
+        "description": "A bow carved from petrified dungeon wood. Strikes first, strikes hard.",
+        "rarity": 2,
+        "stats": {
+            "damage": 4,
+            "armor": 1
+        }
+    },
+    {
+        "id": 15,
+        "name": "Cultist's Robe",
+        "price": 180,
+        "slot": "armor",
+        "description": "Dark robes that amplify magical energy but offer little protection.",
+        "rarity": 3,
+        "stats": {
+            "damage": 7,
+            "armor": -1
+        }
+    },
+    {
+        "id": 16,
+        "name": "Bloodstone Ring",
+        "price": 220,
+        "slot": "accessory",
+        "description": "A ring that feeds on your wounds. The lower your HP, the sharper you strike.",
+        "rarity": 3,
+        "stats": {
+            "damage": 6,
+            "armor": 2
+        }
+    },
+    {
+        "id": 17,
+        "name": "Warden's Greatsword",
+        "price": 280,
+        "slot": "weapon",
+        "description": "A massive blade once wielded by the dungeon's warden. Slow but crushing.",
+        "rarity": 4,
+        "stats": {
+            "damage": 12,
+            "armor": 0
+        }
+    },
+    {
+        "id": 18,
+        "name": "Cursed Mirror Shield",
+        "price": 300,
+        "slot": "shield",
+        "description": "Reflects pain back to its source. Beautiful and terrifying.",
+        "rarity": 4,
+        "stats": {
+            "damage": 3,
+            "armor": 11
+        }
+    },
+    {
+        "id": 19,
+        "name": "Crown of Thorns",
+        "price": 350,
+        "slot": "accessory",
+        "description": "Pain grants power. Lose 1 HP per round but gain massive stats.",
+        "rarity": 4,
+        "stats": {
+            "damage": 14,
+            "armor": 6
+        }
+    },
+    {
+        "id": 20,
+        "name": "Abyssal Boots",
+        "price": 450,
+        "slot": "armor",
+        "description": "Boots from the deepest floor. Grants unmatched agility and resilience.",
+        "rarity": 5,
+        "stats": {
+            "damage": 8,
+            "armor": 10
         }
     }
 ]

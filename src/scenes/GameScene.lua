@@ -123,15 +123,6 @@ function GameScene:keypressed(key)
 	if key == "q" then
 		player:keypressed(key)
 	end
-
-	if key == "d" then
-		local cards = player:getInventoryCards()
-		for _, card in ipairs(cards) do
-			for k, value in pairs(card) do
-				print(k, value)
-			end
-		end
-	end
 end
 
 function GameScene:mousepressed(x, y, button)

@@ -1,74 +1,365 @@
 [
   {
     "id": 1,
-    "name": "Slash",
-    "price": 30,
-    "type": "attack",
-    "description": "A swift slash that deals moderate damage to the target.",
-    "rarity": 1,
-    "stats": { "damage": 4, "manaCost": 1 }
+    "name": "Berserker's Fury",
+    "price": 50,
+    "type": "mult",
+    "description": "Every successful hit chains a x2 multiplier onto the next attack check.",
+    "rarity": 2,
+    "stats": {
+      "multBonus": 2
+    },
+    "effect": "chain_mult"
   },
   {
     "id": 2,
-    "name": "Shield Wall",
-    "price": 45,
-    "type": "defense",
-    "description": "Raise a sturdy shield, gaining armor for this turn.",
-    "rarity": 1,
-    "stats": { "armor": 5, "manaCost": 1 }
+    "name": "Dead Eye",
+    "price": 80,
+    "type": "skill_mod",
+    "description": "Widens the Great zone by 50%. Precision is rewarded.",
+    "rarity": 2,
+    "stats": {
+      "greatArcMult": 1.5
+    },
+    "effect": "widen_great"
   },
   {
     "id": 3,
-    "name": "Poison Dart",
-    "price": 80,
-    "type": "attack",
-    "description": "Launch a poisoned dart that deals damage and applies a lingering debuff.",
-    "rarity": 2,
-    "stats": { "damage": 3, "manaCost": 2 }
+    "name": "Slow Motion",
+    "price": 120,
+    "type": "skill_mod",
+    "description": "Slows the skill check pointer by 25%. Time bends to your will.",
+    "rarity": 3,
+    "stats": {
+      "speedMult": 0.75
+    },
+    "effect": "slow_pointer"
   },
   {
     "id": 4,
-    "name": "Healing Light",
-    "price": 90,
-    "type": "heal",
-    "description": "Channel warm light to restore health over time.",
-    "rarity": 2,
-    "stats": { "heal": 8, "manaCost": 2 }
+    "name": "Iron Wall",
+    "price": 65,
+    "type": "parry",
+    "description": "Each successful parry gives +3 flat armor. Miss and you get nothing.",
+    "rarity": 1,
+    "stats": {
+      "armor": 3
+    },
+    "effect": "flat_parry"
   },
   {
     "id": 5,
-    "name": "Fireball",
-    "price": 150,
-    "type": "magic",
-    "description": "Hurl a searing ball of fire dealing heavy damage to all enemies.",
+    "name": "Thorns",
+    "price": 100,
+    "type": "parry",
+    "description": "When you land a Great parry, reflect 30% of enemy damage back.",
     "rarity": 3,
-    "stats": { "damage": 12, "manaCost": 4 }
+    "stats": {
+      "reflectPct": 0.3
+    },
+    "effect": "reflect_great"
   },
   {
     "id": 6,
-    "name": "Frost Nova",
-    "price": 160,
-    "type": "magic",
-    "description": "Unleash a burst of ice that freezes nearby foes in place.",
+    "name": "Vampiric Edge",
+    "price": 150,
+    "type": "attack",
+    "description": "Heal 20% of damage dealt on Great attacks. Blood fuels your blade.",
     "rarity": 3,
-    "stats": { "damage": 6, "manaCost": 3 }
+    "stats": {
+      "lifestealPct": 0.2
+    },
+    "effect": "lifesteal_great"
   },
   {
     "id": 7,
-    "name": "Shadow Strike",
-    "price": 280,
-    "type": "attack",
-    "description": "Vanish into shadow and strike from behind, dealing devastating critical damage.",
-    "rarity": 4,
-    "stats": { "damage": 20, "manaCost": 5 }
+    "name": "Lucky Coin",
+    "price": 40,
+    "type": "skill_mod",
+    "description": "On a miss, 30% chance to re-roll as a success. Fortune favors the bold.",
+    "rarity": 2,
+    "stats": {
+      "missRetryChance": 0.3
+    },
+    "effect": "miss_reroll"
   },
   {
     "id": 8,
-    "name": "Divine Wrath",
-    "price": 500,
-    "type": "magic",
-    "description": "Call down a pillar of holy fire from the heavens, annihilating everything in its path.",
+    "name": "Combo King",
+    "price": 200,
+    "type": "mult",
+    "description": "If all 3 attack checks hit success or better, gain a x3 damage bonus on total.",
+    "rarity": 4,
+    "stats": {
+      "comboMult": 3
+    },
+    "effect": "full_combo"
+  },
+  {
+    "id": 9,
+    "name": "Glass Cannon",
+    "price": 180,
+    "type": "attack",
+    "description": "Doubles all attack damage. But parry defense is halved. High risk, high reward.",
+    "rarity": 4,
+    "stats": {
+      "atkMult": 2.0,
+      "defMult": 0.5
+    },
+    "effect": "glass_cannon"
+  },
+  {
+    "id": 10,
+    "name": "Second Wind",
+    "price": 90,
+    "type": "heal",
+    "description": "Heal 5 HP at the end of each combat round. Slow but steady recovery.",
+    "rarity": 2,
+    "stats": {
+      "heal": 5
+    },
+    "effect": "heal_per_turn"
+  },
+  {
+    "id": 11,
+    "name": "Adrenaline Rush",
+    "price": 130,
+    "type": "skill_mod",
+    "description": "Adds +1 extra round to every skill check. More spins = bigger multiplier.",
+    "rarity": 3,
+    "stats": {
+      "extraRounds": 1
+    },
+    "effect": "extra_rounds"
+  },
+  {
+    "id": 12,
+    "name": "Critical Mass",
+    "price": 250,
+    "type": "mult",
+    "description": "Great hits multiply damage by x4 instead of x1. Ordinary hits unchanged.",
+    "rarity": 4,
+    "stats": {
+      "greatDmgMult": 4.0
+    },
+    "effect": "great_multiplier"
+  },
+  {
+    "id": 13,
+    "name": "Counterattack",
+    "price": 110,
+    "type": "parry",
+    "description": "Each successful parry deals 4 damage to the enemy. Defense is offense.",
+    "rarity": 3,
+    "stats": {
+      "counterDmg": 4
+    },
+    "effect": "counter_hit"
+  },
+  {
+    "id": 14,
+    "name": "Tunnel Vision",
+    "price": 70,
+    "type": "skill_mod",
+    "description": "Shrinks success zone by 20% but doubles the Great zone. All or nothing.",
+    "rarity": 2,
+    "stats": {
+      "successArcMult": 0.8,
+      "greatArcMult": 2.0
+    },
+    "effect": "tunnel_vision"
+  },
+  {
+    "id": 15,
+    "name": "Soul Harvest",
+    "price": 300,
+    "type": "mult",
+    "description": "For every enemy killed, permanently gain +1 base damage. Power grows with kills.",
     "rarity": 5,
-    "stats": { "damage": 35, "manaCost": 8 }
+    "stats": {
+      "dmgPerKill": 1
+    },
+    "effect": "soul_harvest"
+  },
+  {
+    "id": 16,
+    "name": "Shield Bash",
+    "price": 75,
+    "type": "parry",
+    "description": "Great parries stun the enemy, reducing their next attack by 40%.",
+    "rarity": 2,
+    "stats": {
+      "stunReduction": 0.4
+    },
+    "effect": "stun_parry"
+  },
+  {
+    "id": 17,
+    "name": "Double Down",
+    "price": 60,
+    "type": "mult",
+    "description": "Misses now deal 3 damage to YOU, but successful hits deal x1.8 damage.",
+    "rarity": 2,
+    "stats": {
+      "missPenalty": 3,
+      "successMult": 1.8
+    },
+    "effect": "double_down"
+  },
+  {
+    "id": 18,
+    "name": "Bone Armor",
+    "price": 140,
+    "type": "parry",
+    "description": "Gain +1 permanent max HP for every enemy killed. The dead protect you.",
+    "rarity": 3,
+    "stats": {
+      "hpPerKill": 1
+    },
+    "effect": "bone_armor"
+  },
+  {
+    "id": 19,
+    "name": "Echo Strike",
+    "price": 220,
+    "type": "mult",
+    "description": "Your 3rd attack repeats your best hit from this round. Pure devastation.",
+    "rarity": 4,
+    "stats": {},
+    "effect": "echo_strike"
+  },
+  {
+    "id": 20,
+    "name": "Witch's Brew",
+    "price": 55,
+    "type": "heal",
+    "description": "At round end, 50% chance to heal 8 HP. 50% chance to lose 3 HP. Gamble.",
+    "rarity": 2,
+    "stats": {
+      "healAmt": 8,
+      "penaltyAmt": 3,
+      "chance": 0.5
+    },
+    "effect": "witchs_brew"
+  },
+  {
+    "id": 21,
+    "name": "Crit Fisher",
+    "price": 170,
+    "type": "skill_mod",
+    "description": "Success zone shrinks 40%, but Great zone triples. Fish for the orange.",
+    "rarity": 3,
+    "stats": {
+      "successArcMult": 0.6,
+      "greatArcMult": 3.0
+    },
+    "effect": "tunnel_vision"
+  },
+  {
+    "id": 22,
+    "name": "Last Stand",
+    "price": 190,
+    "type": "attack",
+    "description": "Below 25% HP, all attack damage is tripled. Fight like you have nothing to lose.",
+    "rarity": 3,
+    "stats": {
+      "threshold": 0.25,
+      "dmgMult": 3.0
+    },
+    "effect": "last_stand"
+  },
+  {
+    "id": 23,
+    "name": "Siphon Soul",
+    "price": 280,
+    "type": "attack",
+    "description": "Great attacks steal 2 points of enemy defence permanently. Weaken them.",
+    "rarity": 4,
+    "stats": {
+      "defSteal": 2
+    },
+    "effect": "siphon_soul"
+  },
+  {
+    "id": 24,
+    "name": "Overcharge",
+    "price": 160,
+    "type": "skill_mod",
+    "description": "+2 extra rounds on skill checks, but pointer is 30% faster. Risk vs reward.",
+    "rarity": 3,
+    "stats": {
+      "extraRounds": 2,
+      "speedMult": 1.3
+    },
+    "effect": "overcharge"
+  },
+  {
+    "id": 25,
+    "name": "Bleed",
+    "price": 110,
+    "type": "attack",
+    "description": "Any successful attack inflicts bleed: 2 damage per round for 3 rounds.",
+    "rarity": 2,
+    "stats": {
+      "bleedDmg": 2,
+      "bleedRounds": 3
+    },
+    "effect": "bleed"
+  },
+  {
+    "id": 26,
+    "name": "Retribution",
+    "price": 200,
+    "type": "attack",
+    "description": "Gain +1% damage for every 1% of HP you're missing. Pain is power.",
+    "rarity": 4,
+    "stats": {},
+    "effect": "retribution"
+  },
+  {
+    "id": 27,
+    "name": "Resonance",
+    "price": 240,
+    "type": "mult",
+    "description": "Consecutive Great hits amplify: 1st = normal, 2nd = x2, 3rd = x4. Stack the crits.",
+    "rarity": 4,
+    "stats": {},
+    "effect": "resonance"
+  },
+  {
+    "id": 28,
+    "name": "Fortify",
+    "price": 95,
+    "type": "parry",
+    "description": "Each successful parry in a row gives +2 more armor than the last. Stack up.",
+    "rarity": 2,
+    "stats": {
+      "stackArmor": 2
+    },
+    "effect": "fortify"
+  },
+  {
+    "id": 29,
+    "name": "Doppelganger",
+    "price": 320,
+    "type": "mult",
+    "description": "At round end, your total damage is dealt a second time at 40% power. Ghost hit.",
+    "rarity": 5,
+    "stats": {
+      "ghostPct": 0.4
+    },
+    "effect": "doppelganger"
+  },
+  {
+    "id": 30,
+    "name": "Phoenix Feather",
+    "price": 500,
+    "type": "heal",
+    "description": "Once per stage, revive with 50% HP on death. You get one more chance.",
+    "rarity": 5,
+    "stats": {
+      "revivePct": 0.5
+    },
+    "effect": "phoenix"
   }
 ]
