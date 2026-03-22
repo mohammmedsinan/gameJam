@@ -10,12 +10,12 @@ local TWO_PI = math.pi * 2
 local DEFAULT_ZONES = {
 	success = {
 		arcSize = math.rad(60),
-		color = { 0.1, 0.9, 0.1, 0.85 },
+		color = { 0.2, 0.7, 0.3, 0.85 },
 		lineWidth = 6
 	},
 	great = {
 		arcSize = math.rad(15),
-		color = { 1, 1, 0.1, 1 },
+		color = { 1.0, 0.6, 0.1, 1.0 },
 		lineWidth = 6
 	}
 }
@@ -26,12 +26,13 @@ local DEFAULT_POINTER = {
 		w = 10,
 		h = 10
 	},
-	color = { 1, 0, 1, 1 }
+	color = { 1, 0.9, 0.7, 1 }
 }
 
 local FLASH_DURATION = 0.35
 local SHAKE_DURATION = 0.4
 local SHAKE_MAGNITUDE = 6
+local NUMBER_OF_ROUNDS = 3
 
 -- ─────────────────────────────────────────────
 --  Constructor
@@ -69,7 +70,7 @@ function SkillCheck:new(config)
 
 		result = nil,
 		flashTimer = 0,
-
+		rounds = config.numberOfRounds or NUMBER_OF_ROUNDS,
 		shakeTimer = 0,
 		shakeOffset = {
 			x = 0,
@@ -206,17 +207,17 @@ function SkillCheck:_drawSkillCheck()
 	if self.result and self.flashTimer > 0 then
 		local alpha = self.flashTimer / FLASH_DURATION
 		if self.result == "great" then
-			love.graphics.setColor(1, 1, 0, alpha * 0.4)
+			love.graphics.setColor(1.0, 0.6, 0.1, alpha * 0.4)
 		elseif self.result == "success" then
-			love.graphics.setColor(0, 1, 0, alpha * 0.3)
+			love.graphics.setColor(0.2, 0.7, 0.3, alpha * 0.4)
 		else
-			love.graphics.setColor(1, 0, 0, alpha * 0.5)
+			love.graphics.setColor(0.8, 0.2, 0.1, alpha * 0.5)
 		end
 		love.graphics.circle("fill", x, y, r * 1.15)
 	end
 
 	-- Base filled circle
-	love.graphics.setColor(0.2, 0.2, 0.5, 0.2)
+	love.graphics.setColor(0.05, 0.05, 0.06, 0.8)
 	love.graphics.circle("fill", x, y, r)
 
 	-- Success zone arc
@@ -228,9 +229,9 @@ function SkillCheck:_drawSkillCheck()
 		self.zones.great.color, self.zones.great.lineWidth)
 
 	-- Base border circle
-	love.graphics.setColor(1, 0, 0, 1)
-	love.graphics.setLineWidth(1)
-	--love.graphics.circle("line", x, y, r)
+	love.graphics.setColor(0.4, 0.3, 0.2, 0.8)
+	love.graphics.setLineWidth(2)
+	love.graphics.circle("line", x, y, r)
 	love.graphics.setLineWidth(1)
 
 	-- Pointer
@@ -271,7 +272,15 @@ end
 --  Zone management API
 -- ─────────────────────────────────────────────
 function SkillCheck:randomiseZones()
-	local startAngle = math.random() * TWO_PI
+	local minAngle = math.pi / 2
+	local maxAngle = TWO_PI - self.zones.success.arcSize
+
+	-- In case the arcSize is exceptionally large
+	if maxAngle < minAngle then
+		minAngle = maxAngle
+	end
+
+	local startAngle = minAngle + math.random() * (maxAngle - minAngle)
 	self.zones.success.startAngle = startAngle
 	local greatOffset = (self.zones.success.arcSize - self.zones.great.arcSize) / 2
 	self.zones.great.startAngle = startAngle + greatOffset

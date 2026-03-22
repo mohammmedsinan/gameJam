@@ -6,6 +6,7 @@ local CameraShake = require("src/utils/shake")
 local DamageNumbers = require("src/utils/damage_numbers")
 local MultAnim = require("src/utils/multi_animation")
 local CardHand = require("src/ui/CardHand")
+local DungeonShader = require("src/utils/DungeonShader")
 
 Player = require("src/entities/player");
 Boss = require("src/entities/boss");
@@ -19,8 +20,20 @@ local cardHand
 GameScene.__index = GameScene
 
 function GameScene:load()
+	local handArea = chatBox:getChatBoxScreenDetails()
+	cardHand = CardHand.new({
+		layout        = "nfan",
+		x             = handArea.posX + 20,
+		y             = handArea.posY + 20,
+		width         = handArea.width - 20,
+		cardWidth     = 80,
+		cardHeight    = 112,
+		onCardClicked = function(card)
+			print("[Card Clicked] " .. card.name .. " (" .. card:getRarityName() .. ")")
+		end,
+	})
 	boss = Boss.new(bus)
-	player = Player.new(bus)
+	player = Player.new(bus, cardHand)
 	dmg = DamageNumbers.new();
 	CrTv:load()
 	chatBox:load()
@@ -30,19 +43,6 @@ function GameScene:load()
 		SK:load()
 	end
 	-- ── Card Hand ────────────────────────────────────────────────────────
-	local shopArea = shopper:getShopperScreenDetails()
-	local handArea = chatBox:getChatBoxScreenDetails()
-	cardHand = CardHand.new({
-		layout        = "nfan",
-		x             = handArea.posX + 20,
-		y             = handArea.posY + 20,
-		width         = handArea.width - 40,
-		cardWidth     = 80,
-		cardHeight    = 112,
-		onCardClicked = function(card)
-			print("[Card Clicked] " .. card.name .. " (" .. card:getRarityName() .. ")")
-		end,
-	})
 	cardHand:setCards(player:getInventoryCards())
 	shake = CameraShake.new({
 		max_offset_x = 50,
@@ -56,6 +56,7 @@ function GameScene:load()
 end
 
 function GameScene:update(dt)
+	DungeonShader:update(dt)
 	CrTv:update(dt)
 	chatBox:update(dt)
 	shopper:update(dt)
@@ -72,12 +73,17 @@ function GameScene:update(dt)
 end
 
 function GameScene:draw()
+	DungeonShader:draw()
 	shake:apply()
-	love.graphics.setColor(0, 0, 0, 0.55)
+	love.graphics.setColor(0.05, 0.05, 0.06, 0.9)
 	love.graphics.rectangle("fill", 10, 10, 320, 100, 8, 8)
+	love.graphics.setColor(0.55, 0.40, 0.20, 0.9)
+	love.graphics.setLineWidth(2)
+	love.graphics.rectangle("line", 10, 10, 320, 100, 8, 8)
+	love.graphics.setLineWidth(1)
 	local trauma_pct = math.floor(shake.trauma * 100)
 	local bar_w = math.floor(shake.trauma * 200)
-	love.graphics.setColor(0.25, 0.25, 0.25)
+	love.graphics.setColor(0.1, 0.1, 0.12)
 	love.graphics.rectangle("fill", 20, 15, 200, 16, 4, 4)
 	love.graphics.setColor(1, 0.35, 0.15)
 	love.graphics.rectangle("fill", 20, 15, bar_w, 16, 4, 4)
@@ -99,7 +105,7 @@ function GameScene:draw()
 end
 
 function GameScene:keypressed(key)
-	if key == "tab" then
+	if key == "escape" then
 		SceneManager:switch("menu", {
 			kind = "fade",
 			duration = 0.3
@@ -145,22 +151,34 @@ function GameScene:keypressed(key)
 			SK:Spawn()
 		end
 	end
+
 	if key == "q" then
 		player:keypressed(key)
-		cardHand:setCards(player:getInventoryCards())
+	end
+
+	if key == "d" then
+		local cards = player:getInventoryCards()
+		for _, card in ipairs(cards) do
+			for key, value in pairs(card) do
+				print(key, value)
+			end
+		end
 	end
 end
 
 function GameScene:mousepressed(x, y, button)
 	cardHand:mousepressed(x, y, button)
+	shopper:mousepressed(x, y, button)
 end
 
 function GameScene:mousereleased(x, y, button)
 	cardHand:mousereleased(x, y, button)
+	shopper:mousereleased(x, y, button)
 end
 
 function GameScene:mousemoved(x, y, dx, dy)
 	cardHand:mousemoved(x, y, dx, dy)
+	shopper:mousemoved(x, y, dx, dy)
 end
 
 return GameScene

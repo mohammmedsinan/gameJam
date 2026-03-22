@@ -31,9 +31,6 @@ function love.keypressed(k, s, r)
 end
 
 function love.keyreleased(k, s)
-	if k == "escape" then
-		love.event.quit();
-	end
 	if k == "w" then
 		local isFullScreen, _ = love.window.getFullscreen()
 		love.window.setFullscreen(not isFullScreen)

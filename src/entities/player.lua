@@ -4,10 +4,11 @@ local json = require("src/utils/json");
 local Player = {}
 Player.__index = Player
 
-function Player.new(bus)
+function Player.new(bus, cardHand)
 	return setmetatable({
 		name = "player",
 		bus = bus,
+		cardHand = cardHand,
 		width = 70,
 		height = 70,
 		health = 10,
@@ -20,7 +21,8 @@ function Player.new(bus)
 		gold = 0,
 		inventory = {
 			cards = {},
-			items = {}
+			items = {},
+			equipments = {} -- array of equipped items, up to 6 slots
 		}
 	}, Player)
 end
@@ -40,6 +42,7 @@ end
 function Player:addCardToInventory(cardData)
 	if not self:hasCardInInventory(cardData.id) then
 		table.insert(self.inventory.cards, cardData)
+		self.cardHand:setCards(player:getInventoryCards())
 	end
 end
 
@@ -58,6 +61,31 @@ end
 
 function Player:getInventoryCards()
 	return self.inventory.cards
+end
+
+function Player:getInventoryItems()
+	return self.inventory.equipments
+end
+
+function Player:equipItem(equipment)
+	if #self.inventory.equipments < math.min(6, self.level) then
+		table.insert(self.inventory.equipments, equipment)
+		if equipment.stats then
+			if equipment.stats.damage then self.damage = self.damage + equipment.stats.damage end
+			if equipment.stats.armor then self.defence = self.defence + equipment.stats.armor end
+		end
+		return true
+	end
+	return false
+end
+
+function Player:unequipItem(index)
+	local equipment = table.remove(self.inventory.equipments, index)
+	if equipment and equipment.stats then
+		if equipment.stats.damage then self.damage = self.damage - equipment.stats.damage end
+		if equipment.stats.armor then self.defence = self.defence - equipment.stats.armor end
+	end
+	return equipment
 end
 
 function Player:update(dt)

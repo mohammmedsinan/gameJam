@@ -30,12 +30,16 @@ function chatBox:update(dt)
 end
 
 function chatBox:draw()
-	love.graphics.setColor(0.2, 0.2, 0.2, 0.2)
+	love.graphics.setColor(0.12, 0.12, 0.14, 0.85)
 	local chatBoxScreen = self:getChatBoxScreenDetails();
-	love.graphics.rectangle("fill", chatBoxScreen.posX, chatBoxScreen.posY, chatBoxScreen.width, chatBoxScreen.height)
-	-- red color for the border
-	love.graphics.setColor(1, 0, 0, 1)
-	love.graphics.rectangle("line", chatBoxScreen.posX, chatBoxScreen.posY, chatBoxScreen.width, chatBoxScreen.height)
+	love.graphics.rectangle("fill", chatBoxScreen.posX, chatBoxScreen.posY, chatBoxScreen.width, chatBoxScreen.height, 6,
+		6)
+	-- warm brass border
+	love.graphics.setColor(0.85, 0.55, 0.10, 0.9)
+	love.graphics.setLineWidth(2)
+	love.graphics.rectangle("line", chatBoxScreen.posX, chatBoxScreen.posY, chatBoxScreen.width, chatBoxScreen.height, 6,
+		6)
+	love.graphics.setLineWidth(1)
 end
 
 return chatBox;

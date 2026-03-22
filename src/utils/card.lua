@@ -118,7 +118,9 @@ function CardHandler.new(data)
 
 	-- Geometry
 	self.x               = 0
+	self.xVel            = 0
 	self.y               = 0
+	self.yVel            = 0
 	self.baseX           = 0
 	self.baseY           = 0
 	self.width           = DEFAULT_WIDTH
@@ -144,6 +146,8 @@ function CardHandler.new(data)
 	self.hovered         = false
 	self.selected        = false
 	self.dragging        = false
+	self._dragOffsetX    = 0
+	self._dragOffsetY    = 0
 	self.hoverTime       = 0
 	self.tooltipReady    = false
 	self.visible         = true
@@ -173,8 +177,10 @@ end
 function CardHandler:setPosition(x, y)
 	self.baseX = x
 	self.baseY = y
-	self.x     = x
-	self.y     = y
+	if self.x == 0 and self.y == 0 then
+		self.x = x
+		self.y = y
+	end
 end
 
 function CardHandler:setScale(s)
@@ -280,8 +286,18 @@ function CardHandler:mousepressed(mx, my, button)
 	return false
 end
 
+function CardHandler:startDrag(mx, my)
+	self.dragging = true
+	self._dragOffsetX = self.x - mx
+	self._dragOffsetY = self.y - my
+end
+
+function CardHandler:stopDrag()
+	self.dragging = false
+end
+
 function CardHandler:mousereleased(mx, my, button)
-	-- reserved for drag-end logic
+	-- drag-end logic handled in CardHand or externally
 end
 
 -------------------------------------------------------------------------------
@@ -316,13 +332,23 @@ function CardHandler:update(dt, mx, my)
 		dt)
 	self.glowAlpha, self.glowAlphaVel = springLerp(self.glowAlpha, self.targetGlowAlpha, self.glowAlphaVel, 8, 0.75, dt)
 
-	-- Idle floating
-	local idleFloat                   = math.sin(self._time * IDLE_FLOAT_SPEED + self._idleOffset) * IDLE_FLOAT_AMP
-	self.x                            = self.baseX
-	self.y                            = self.baseY - self.liftY + idleFloat
+	local targetX                     = self.baseX
+	local targetY                     = self.baseY - self.liftY
+
+	if self.dragging then
+		targetX = (mx or self.baseX) + self._dragOffsetX
+		targetY = (my or self.baseY) + self._dragOffsetY
+	else
+		-- Idle floating
+		local idleFloat = math.sin(self._time * IDLE_FLOAT_SPEED + self._idleOffset) * IDLE_FLOAT_AMP
+		targetY = targetY + idleFloat
+	end
+
+	self.x, self.xVel = springLerp(self.x, targetX, self.xVel, SPRING_STIFF, SPRING_DAMP, dt)
+	self.y, self.yVel = springLerp(self.y, targetY, self.yVel, SPRING_STIFF, SPRING_DAMP, dt)
 
 	-- Rotation = base + tilt
-	self.rotation                     = self.baseRotation + self.tiltX
+	self.rotation     = self.baseRotation + self.tiltX
 end
 
 -------------------------------------------------------------------------------

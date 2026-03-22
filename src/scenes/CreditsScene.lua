@@ -1,3 +1,4 @@
+local DungeonShader = require("src/utils/DungeonShader")
 local CreditsScene = {}
 CreditsScene.__index = CreditsScene
 
@@ -32,8 +33,7 @@ end
 
 function CreditsScene:draw()
 	love.graphics.push("all")
-	love.graphics.setColor(0.04, 0.04, 0.05, 1)
-	love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
+	DungeonShader:draw()
 
 	local w, h = love.graphics.getDimensions()
 	local cx = w / 2

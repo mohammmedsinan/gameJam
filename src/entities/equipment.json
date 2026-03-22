@@ -66,5 +66,28 @@
         "stats": {
             "armor": 2
         }
+    },
+    {
+        "id": 7,
+        "name": "Swift Boots",
+        "price": 250,
+        "slot": "accessory",
+        "description": "Magical boots that grant a chance to dodge attacks.",
+        "rarity": 3,
+        "stats": {
+            "dodge": 10
+        }
+    },
+    {
+        "id": 8,
+        "name": "Cursed Ring",
+        "price": 400,
+        "slot": "accessory",
+        "description": "A dark ring that drastically boosts damage but drains health.",
+        "rarity": 4,
+        "stats": {
+            "damage": 15,
+            "heal": -2
+        }
     }
 ]

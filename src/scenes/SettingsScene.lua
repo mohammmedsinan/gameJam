@@ -1,3 +1,4 @@
+local DungeonShader = require("src/utils/DungeonShader")
 local SettingsScene = {}
 SettingsScene.__index = SettingsScene
 
@@ -16,6 +17,7 @@ function SettingsScene:enter(prev)
 end
 
 function SettingsScene:update(dt)
+    DungeonShader:update(dt)
     local mx, my = love.mouse.getPosition()
     local w, h = love.graphics.getDimensions()
     local cx = w / 2
@@ -32,8 +34,7 @@ end
 
 function SettingsScene:draw()
     love.graphics.push("all")
-    love.graphics.setColor(0.04, 0.04, 0.05, 1)
-    love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
+    DungeonShader:draw()
 
     local w, h = love.graphics.getDimensions()
     local cx = w / 2

@@ -32,12 +32,14 @@ function CrTv:load()
 end
 
 function CrTv:draw()
-	love.graphics.setColor(0.2, 0.2, 0.2, 0.2)
+	love.graphics.setColor(0.12, 0.12, 0.14, 0.85)
 	local TvScreen = self:getCrTvScreenDetails();
-	love.graphics.rectangle("fill", TvScreen.posX, TvScreen.posY, TvScreen.width, TvScreen.height)
-	-- red color for the border
-	love.graphics.setColor(1, 0, 0, 1)
-	love.graphics.rectangle("line", TvScreen.posX, TvScreen.posY, TvScreen.width, TvScreen.height)
+	love.graphics.rectangle("fill", TvScreen.posX, TvScreen.posY, TvScreen.width, TvScreen.height, 6, 6)
+	-- warm brass border
+	love.graphics.setColor(0.85, 0.55, 0.10, 0.9)
+	love.graphics.setLineWidth(2)
+	love.graphics.rectangle("line", TvScreen.posX, TvScreen.posY, TvScreen.width, TvScreen.height, 6, 6)
+	love.graphics.setLineWidth(1)
 end
 
 function CrTv:update(dt)

@@ -54,6 +54,7 @@ function CardHand.new(opts)
 	-- Tooltip
 	self._tooltip      = CardTooltip.new()
 	self._hoveredCard  = nil
+	self.draggedCard   = nil
 
 	-- Callbacks
 	self.onCardClicked = opts.onCardClicked
@@ -234,7 +235,12 @@ end
 function CardHand:mousepressed(mx, my, button)
 	-- Route in reverse z-order so top card gets priority
 	for i = #self.cards, 1, -1 do
-		if self.cards[i]:mousepressed(mx, my, button) then
+		local card = self.cards[i]
+		if card:mousepressed(mx, my, button) then
+			if button == 1 then
+				self.draggedCard = card
+				card:startDrag(mx, my)
+			end
 			return true
 		end
 	end
@@ -244,6 +250,10 @@ end
 function CardHand:mousereleased(mx, my, button)
 	for _, card in ipairs(self.cards) do
 		card:mousereleased(mx, my, button)
+	end
+	if self.draggedCard and button == 1 then
+		self.draggedCard:stopDrag()
+		self.draggedCard = nil
 	end
 end
 
@@ -255,6 +265,31 @@ function CardHand:update(dt)
 	for _, card in ipairs(self.cards) do
 		card:update(dt, mx, my)
 	end
+
+	if self.draggedCard then
+		local dragIndex
+		for i, c in ipairs(self.cards) do
+			if c == self.draggedCard then
+				dragIndex = i
+				break
+			end
+		end
+		if dragIndex then
+			for i, c in ipairs(self.cards) do
+				if c ~= self.draggedCard then
+					local dx = mx - c.baseX
+					local dy = my - c.baseY
+					local dist = math.sqrt(dx * dx + dy * dy)
+					if dist < c.width * 0.5 then
+						self.cards[dragIndex], self.cards[i] = self.cards[i], self.cards[dragIndex]
+						self:_reflow()
+						break
+					end
+				end
+			end
+		end
+	end
+
 	self._tooltip:update(dt)
 end
 
@@ -268,6 +303,10 @@ function CardHand:draw()
 		sorted[i] = card
 	end
 	table.sort(sorted, function(a, b)
+		-- Provide top z-index for draggedCard
+		if a == self.draggedCard then return false end
+		if b == self.draggedCard then return true end
+
 		if a.hovered ~= b.hovered then
 			return not a.hovered -- non-hovered first
 		end
