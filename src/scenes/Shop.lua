@@ -532,6 +532,10 @@ function Shop:mousepressed(x, y, button)
 	end
 end
 
+function Shop.gainGold(amount)
+	playerGold = playerGold + amount
+end
+
 function Shop:mousereleased(x, y, button)
 	cardHand:mousereleased(x, y, button)
 end

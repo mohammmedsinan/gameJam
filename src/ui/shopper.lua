@@ -1,6 +1,7 @@
 local CrTv = require("src/ui/CrTv");
 local chatBox = require("src/ui/chatBox");
 local EquipmentHand = require("src/ui/EquipmentHand");
+local shop = require("src/scenes/Shop");
 
 local shopper = {
 	equipHand = nil
@@ -46,9 +47,8 @@ function shopper:load()
 			if player then
 				local unequipped = player:unequipItem(index)
 				if unequipped then
-					local sellValue = math.floor((unequipped.price or 0) / 2)
-					player.gold = player.gold + sellValue
-					print("[Shopper] Sold " .. unequipped.name .. " for $" .. sellValue)
+					shop.gainGold(item.price)
+					player:unequipItem(index)
 				end
 				self.equipHand:syncItems(player.inventory.equipments)
 			end
