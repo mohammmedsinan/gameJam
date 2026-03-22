@@ -35,7 +35,7 @@ local CFG = {
 
 	colorLabel     = { 1.00, 0.82, 0.10, 1 }, -- golden yellow
 	colorOutline   = { 0.10, 0.04, 0.00, 1 }, -- near-black warm
-	colorFlash     = { 1.00, 1.00, 1.00, 0.50 },
+	colorFlash     = { 1.00, 1.00, 1.00, 0.05 },
 	colorGlow      = { 1.00, 0.65, 0.05, 0.20 },
 	colorSpark     = { 1.00, 0.90, 0.25, 1 },
 

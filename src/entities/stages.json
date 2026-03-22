@@ -1,0 +1,354 @@
+{
+    "stages": [
+        {
+            "id": 1,
+            "name": "The Crypt",
+            "encounters": [
+                {
+                    "name": "Skeleton Grunt",
+                    "health": 30,
+                    "attack": 3,
+                    "defence": 0,
+                    "effect": null
+                },
+                {
+                    "name": "Zombie Shambler",
+                    "health": 35,
+                    "attack": 4,
+                    "defence": 1,
+                    "effect": null
+                },
+                {
+                    "name": "Ghost Wisp",
+                    "health": 25,
+                    "attack": 5,
+                    "defence": 0,
+                    "effect": null
+                },
+                {
+                    "name": "The Bone King",
+                    "health": 60,
+                    "attack": 6,
+                    "defence": 2,
+                    "effect": "regen",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Goblin Warrens",
+            "encounters": [
+                {
+                    "name": "Goblin Scout",
+                    "health": 35,
+                    "attack": 5,
+                    "defence": 1,
+                    "effect": null
+                },
+                {
+                    "name": "Goblin Brute",
+                    "health": 45,
+                    "attack": 6,
+                    "defence": 2,
+                    "effect": null
+                },
+                {
+                    "name": "Goblin Shaman",
+                    "health": 30,
+                    "attack": 7,
+                    "defence": 1,
+                    "effect": null
+                },
+                {
+                    "name": "Warchief Grak",
+                    "health": 80,
+                    "attack": 8,
+                    "defence": 3,
+                    "effect": "rage",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Flooded Tunnels",
+            "encounters": [
+                {
+                    "name": "Drowned Rat",
+                    "health": 40,
+                    "attack": 6,
+                    "defence": 2,
+                    "effect": null
+                },
+                {
+                    "name": "Sewer Lurker",
+                    "health": 50,
+                    "attack": 7,
+                    "defence": 2,
+                    "effect": null
+                },
+                {
+                    "name": "Bloated Corpse",
+                    "health": 55,
+                    "attack": 8,
+                    "defence": 1,
+                    "effect": null
+                },
+                {
+                    "name": "The Drowned King",
+                    "health": 100,
+                    "attack": 10,
+                    "defence": 4,
+                    "effect": "poison",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "name": "Cursed Library",
+            "encounters": [
+                {
+                    "name": "Living Tome",
+                    "health": 45,
+                    "attack": 8,
+                    "defence": 3,
+                    "effect": null
+                },
+                {
+                    "name": "Ink Wraith",
+                    "health": 50,
+                    "attack": 9,
+                    "defence": 2,
+                    "effect": null
+                },
+                {
+                    "name": "Paper Golem",
+                    "health": 65,
+                    "attack": 7,
+                    "defence": 5,
+                    "effect": null
+                },
+                {
+                    "name": "Archmagus Scroll",
+                    "health": 120,
+                    "attack": 12,
+                    "defence": 5,
+                    "effect": "shield",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "name": "Lava Depths",
+            "encounters": [
+                {
+                    "name": "Fire Imp",
+                    "health": 50,
+                    "attack": 10,
+                    "defence": 3,
+                    "effect": null
+                },
+                {
+                    "name": "Magma Slug",
+                    "health": 70,
+                    "attack": 9,
+                    "defence": 4,
+                    "effect": null
+                },
+                {
+                    "name": "Ember Wraith",
+                    "health": 55,
+                    "attack": 12,
+                    "defence": 2,
+                    "effect": null
+                },
+                {
+                    "name": "Inferno Drake",
+                    "health": 150,
+                    "attack": 14,
+                    "defence": 6,
+                    "effect": "burn",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "name": "Frozen Caverns",
+            "encounters": [
+                {
+                    "name": "Ice Stalker",
+                    "health": 60,
+                    "attack": 11,
+                    "defence": 4,
+                    "effect": null
+                },
+                {
+                    "name": "Frost Elemental",
+                    "health": 75,
+                    "attack": 12,
+                    "defence": 5,
+                    "effect": null
+                },
+                {
+                    "name": "Frozen Revenant",
+                    "health": 65,
+                    "attack": 14,
+                    "defence": 3,
+                    "effect": null
+                },
+                {
+                    "name": "Glacial Titan",
+                    "health": 180,
+                    "attack": 16,
+                    "defence": 7,
+                    "effect": "freeze",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "name": "Shadow Realm",
+            "encounters": [
+                {
+                    "name": "Shadow Fiend",
+                    "health": 70,
+                    "attack": 13,
+                    "defence": 5,
+                    "effect": null
+                },
+                {
+                    "name": "Void Walker",
+                    "health": 80,
+                    "attack": 14,
+                    "defence": 5,
+                    "effect": null
+                },
+                {
+                    "name": "Dark Sentinel",
+                    "health": 85,
+                    "attack": 15,
+                    "defence": 6,
+                    "effect": null
+                },
+                {
+                    "name": "The Void Lord",
+                    "health": 220,
+                    "attack": 18,
+                    "defence": 8,
+                    "effect": "drain",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "name": "Bone Cathedral",
+            "encounters": [
+                {
+                    "name": "Bone Acolyte",
+                    "health": 80,
+                    "attack": 15,
+                    "defence": 6,
+                    "effect": null
+                },
+                {
+                    "name": "Skull Reaper",
+                    "health": 90,
+                    "attack": 16,
+                    "defence": 6,
+                    "effect": null
+                },
+                {
+                    "name": "Ossuary Guardian",
+                    "health": 100,
+                    "attack": 17,
+                    "defence": 7,
+                    "effect": null
+                },
+                {
+                    "name": "Archbishop of Bone",
+                    "health": 260,
+                    "attack": 20,
+                    "defence": 9,
+                    "effect": "undying",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 9,
+            "name": "Abyssal Pit",
+            "encounters": [
+                {
+                    "name": "Abyss Crawler",
+                    "health": 90,
+                    "attack": 17,
+                    "defence": 7,
+                    "effect": null
+                },
+                {
+                    "name": "Pit Demon",
+                    "health": 100,
+                    "attack": 18,
+                    "defence": 7,
+                    "effect": null
+                },
+                {
+                    "name": "Abyssal Eye",
+                    "health": 95,
+                    "attack": 20,
+                    "defence": 6,
+                    "effect": null
+                },
+                {
+                    "name": "Demonlord Xar",
+                    "health": 300,
+                    "attack": 22,
+                    "defence": 10,
+                    "effect": "curse",
+                    "isBoss": true
+                }
+            ]
+        },
+        {
+            "id": 10,
+            "name": "The Final Gate",
+            "encounters": [
+                {
+                    "name": "Gate Warden",
+                    "health": 100,
+                    "attack": 19,
+                    "defence": 8,
+                    "effect": null
+                },
+                {
+                    "name": "Eldritch Horror",
+                    "health": 120,
+                    "attack": 20,
+                    "defence": 8,
+                    "effect": null
+                },
+                {
+                    "name": "Fallen Champion",
+                    "health": 110,
+                    "attack": 22,
+                    "defence": 9,
+                    "effect": null
+                },
+                {
+                    "name": "The Broadcaster",
+                    "health": 400,
+                    "attack": 25,
+                    "defence": 12,
+                    "effect": "all",
+                    "isBoss": true
+                }
+            ]
+        }
+    ]
+}

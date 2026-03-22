@@ -35,6 +35,9 @@ local SHAKE_MAGNITUDE = 6
 local NUMBER_OF_ROUNDS = 3
 local BASE_NUMBER_OF_ROUNDS = 3
 
+-- Cached font (created once, not per frame)
+local BIG_FONT = love.graphics.newFont(60)
+
 -- ─────────────────────────────────────────────
 --  Constructor
 -- ─────────────────────────────────────────────
@@ -72,7 +75,7 @@ function SkillCheck:new(config)
 		result = nil,
 		flashTimer = 0,
 		rounds = config.numberOfRounds or NUMBER_OF_ROUNDS,
-		baseRounds = config.baseNumberOfRounds or NUMBER_OF_ROUNDS,
+		baseRounds = config.numberOfRounds or BASE_NUMBER_OF_ROUNDS,
 		shakeTimer = 0,
 		shakeOffset = {
 			x = 0,
@@ -81,7 +84,8 @@ function SkillCheck:new(config)
 
 		onSuccess = config.onSuccess or nil,
 		onGreat = config.onGreat or nil,
-		onMiss = config.onMiss or nil
+		onMiss = config.onMiss or nil,
+		onDespawn = config.onDespawn or nil
 	}
 
 	self.__index = self
@@ -99,14 +103,8 @@ function SkillCheck:update(dt)
 		return
 	end
 
-	self.pointerAngle = self.pointerAngle + self.pointerSpeed * dt
-
-	if self.rounds > 0 and self.spawn and self.pointerAngle % TWO_PI < ((self.baseRounds + 1) / 100) then
-		self.rounds = self.rounds - 1
-		if self.rounds == 0 then
-			self.spawn = false
-			self.result = nil
-		end
+	if not self.result then
+		self.pointerAngle = self.pointerAngle + self.pointerSpeed * dt
 	end
 
 	if self.flashTimer > 0 then
@@ -115,6 +113,9 @@ function SkillCheck:update(dt)
 			self.flashTimer = 0
 			self.spawn = false
 			self.result = nil
+			if self.onDespawn then
+				self.onDespawn()
+			end
 		end
 	end
 
@@ -130,6 +131,18 @@ function SkillCheck:update(dt)
 			self.shakeOffset.y = 0
 		end
 	end
+
+	if self.rounds > 0 and self.spawn and not self.result then
+		local currentCircle = math.floor(self.pointerAngle / TWO_PI)
+		if currentCircle > self.lastCircle then
+			self.lastCircle = currentCircle
+			self.rounds = self.rounds - 1
+			if self.rounds <= 0 then
+				self.rounds = self.baseRounds
+				self:_resolve()
+			end
+		end
+	end
 end
 
 function SkillCheck:draw()
@@ -143,17 +156,18 @@ function SkillCheck:draw()
 	self.radius = TvScreen.width / 8
 	self:_drawSkillCheck()
 
-	-- set font bigger
-	love.graphics.setFont(love.graphics.newFont(60))
+	local prevFont = love.graphics.getFont()
+	love.graphics.setFont(BIG_FONT)
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.print(self.rounds .. "x", self.x - 40, self.y - 20)
+	love.graphics.setFont(prevFont)
 end
 
 -- ─────────────────────────────────────────────
 --  Input
 -- ─────────────────────────────────────────────
 function SkillCheck:keypressed(key)
-	if not self.spawn then
+	if not self.spawn or self.result then
 		return
 	end
 	if key ~= "space" then
@@ -202,11 +216,11 @@ function SkillCheck:_triggerResult(result)
 		end
 	elseif result == "great" then
 		if self.onGreat then
-			self.onGreat()
+			self.onGreat(self.rounds)
 		end
 	else
 		if self.onSuccess then
-			self.onSuccess()
+			self.onSuccess(self.rounds)
 		end
 	end
 end
@@ -332,6 +346,7 @@ function SkillCheck:Spawn()
 	self.result = nil
 	self.flashTimer = 0
 	self.pointerAngle = 0
+	self.lastCircle = 0
 	self:randomiseZones()
 end
 

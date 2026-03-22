@@ -18,6 +18,8 @@ function Player.new(bus, cardHand)
 		defence = 0,
 		-- xp = 0,
 		level = 1,
+		drawX = 0,
+		drawY = 0,
 		inventory = {
 			cards = {},
 			items = {},
@@ -93,11 +95,13 @@ end
 function Player:draw()
 	love.graphics.setColor(1, 1, 1, 1)
 	local CrTvScreen = CrTv:getCrTvScreenDetails();
-	love.graphics.rectangle("fill", CrTvScreen.border.left + 100, CrTvScreen.border.bottom - 100, self.width,
+	self.drawX = CrTvScreen.border.left + 100
+	self.drawY = CrTvScreen.border.bottom - 100
+	love.graphics.rectangle("fill", self.drawX, self.drawY, self.width,
 		self.height)
 	-- red color for the border
 	love.graphics.setColor(1, 0, 0, 1)
-	love.graphics.rectangle("line", CrTvScreen.border.left + 100, CrTvScreen.border.bottom - 100, self.width,
+	love.graphics.rectangle("line", self.drawX, self.drawY, self.width,
 		self.height)
 end
 

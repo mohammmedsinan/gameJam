@@ -1,7 +1,6 @@
 local chatBox = require("src/ui/chatBox");
 local shopper = require("src/ui/shopper");
 local CrTv = require("src/ui/CrTv");
-local SkillCheck = require("src/game/skillcheck");
 local CameraShake = require("src/utils/shake")
 local DamageNumbers = require("src/utils/damage_numbers")
 local MultAnim = require("src/utils/multi_animation")
@@ -42,10 +41,7 @@ function GameScene:load()
 	chatBox:load()
 	shopper:load()
 	player:load()
-	combat:load()
-	if SK then
-		SK:load()
-	end
+
 	-- ── Card Hand ────────────────────────────────────────────────────────
 	cardHand:setCards(player:getInventoryCards())
 	-- ── Stats Panel ──────────────────────────────────────────────────────
@@ -59,6 +55,10 @@ function GameScene:load()
 		pivot_x      = 400,
 		pivot_y      = 300,
 	})
+
+	-- ── Combat Engine ────────────────────────────────────────────────────
+	combat:load()
+	combat:setRefs(player, boss, shake, dmg, MultAnim)
 end
 
 function GameScene:update(dt)
@@ -76,9 +76,8 @@ function GameScene:update(dt)
 	if statsPanel then
 		statsPanel:update(dt)
 	end
-	if SK then
-		SK:update(dt)
-	end
+	-- ── Combat Engine Update ─────────────────────────────────────────────
+	combat:update(dt)
 end
 
 function GameScene:draw()
@@ -92,9 +91,8 @@ function GameScene:draw()
 	dmg:draw()
 	MultAnim.draw()
 	cardHand:draw()
-	if SK then
-		SK:draw()
-	end
+	-- ── Combat Engine Draw (on top of game world, inside shake) ──────────
+	combat:draw()
 	shake:pop()
 	-- draw HUD on top (outside camera shake)
 	if statsPanel then
@@ -117,37 +115,9 @@ function GameScene:keypressed(key)
 		})
 	end
 
-	if (SK) then
-		SK:keypressed(key)
-	end
-
-	if key == "space" then
-		if SK then
-			SK = nil
-		else
-			SK = SkillCheck:new({
-				successArcSize = math.rad(75),
-				greatArcSize = math.rad(12),
-				pointerSpeed = 7,
-				onSuccess = function()
-					print("success!")
-					shake:add_trauma(0.4)
-				end,
-				onGreat = function()
-					print("GREAT!")
-					shake:add_trauma(0.8)
-					bs = boss:details();
-					MultAnim.spawnChain(bs.x, bs.y, { 3 }, function()
-						dmg:spawn(bs.x, bs.y, love.math.random(100), "crit");
-					end)
-				end,
-				onMiss = function()
-					print("miss...")
-					shake:add_trauma(0.2)
-				end
-			})
-			SK:Spawn()
-		end
+	-- ── Combat engine handles space and combat input ─────────────────────
+	if combat:keypressed(key) then
+		return -- combat consumed the key
 	end
 
 	if key == "q" then
@@ -157,8 +127,8 @@ function GameScene:keypressed(key)
 	if key == "d" then
 		local cards = player:getInventoryCards()
 		for _, card in ipairs(cards) do
-			for key, value in pairs(card) do
-				print(key, value)
+			for k, value in pairs(card) do
+				print(k, value)
 			end
 		end
 	end

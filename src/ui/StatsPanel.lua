@@ -35,16 +35,25 @@ local C            = {
 local PADDING      = 12
 local PANEL_W      = 190
 local PANEL_H      = 230
-local MARGIN_TOP   = 14  -- gap from screen edge
+local MARGIN_TOP   = 14 -- gap from screen edge
 local MARGIN_LEFT  = 14
 local CORNER_R     = 7
 local BAR_H        = 10
 local ROW_H        = 26
 local ICON_SIZE    = 18
-local ANIM_SPEED   = 4.0  -- health bar lerp speed
+local ANIM_SPEED   = 4.0 -- health bar lerp speed
+
+-- ── font cache (created once, not per frame) ─────────────────────────────────
+local _spFontCache = {}
+local function spGetFont(size)
+    if not _spFontCache[size] then
+        _spFontCache[size] = love.graphics.newFont(size)
+    end
+    return _spFontCache[size]
+end
 
 -- ── stat rows definition  (icon char, label, player field) ───────────────────
-local STAT_ROWS    = {
+local STAT_ROWS = {
     { icon = "⚔", label = "Attack", field = "attack" },
     { icon = "🗡", label = "Damage", field = "damage" },
     { icon = "🛡", label = "Defence", field = "defence" },
@@ -127,14 +136,14 @@ function StatsPanel:draw()
     love.graphics.setColor(C.lvlBg)
     love.graphics.rectangle("fill", badgeX, badgeY, badgeW, badgeH, 4, 4)
     love.graphics.setColor(C.lvlText)
-    love.graphics.setFont(love.graphics.newFont(10))
+    love.graphics.setFont(spGetFont(10))
     local lvlLabel = "LV " .. lvlStr
     local lw = love.graphics.getFont():getWidth(lvlLabel)
     love.graphics.print(lvlLabel, badgeX + (badgeW - lw) / 2, badgeY + 3)
 
     -- ── title ─────────────────────────────────────────────────────────────────
     love.graphics.setColor(C.title)
-    love.graphics.setFont(love.graphics.newFont(13))
+    love.graphics.setFont(spGetFont(13))
     love.graphics.print("⚰  DUNGEON HERO", cx, cy)
     cy = cy + 22
 
@@ -152,7 +161,7 @@ function StatsPanel:draw()
 
     -- label row
     love.graphics.setColor(C.label)
-    love.graphics.setFont(love.graphics.newFont(9))
+    love.graphics.setFont(spGetFont(9))
     love.graphics.print("HEALTH", barX, cy)
     local hpStr = player.health .. " / " .. player.maxHealth
     love.graphics.setColor(C.hpText)
@@ -194,7 +203,7 @@ function StatsPanel:draw()
     cy = cy + 8
 
     -- ── stat rows ────────────────────────────────────────────────────────────
-    love.graphics.setFont(love.graphics.newFont(10))
+    love.graphics.setFont(spGetFont(10))
     for _, row in ipairs(STAT_ROWS) do
         self:_drawStatRow(cx, cy, barW, row)
         cy = cy + ROW_H
@@ -206,7 +215,7 @@ function StatsPanel:draw()
     cy = cy + 8
 
     -- ── gold row ─────────────────────────────────────────────────────────────
-    love.graphics.setFont(love.graphics.newFont(11))
+    love.graphics.setFont(spGetFont(11))
     -- icon bg
     love.graphics.setColor(C.iconBg)
     love.graphics.rectangle("fill", cx, cy, ICON_SIZE, ICON_SIZE, 3, 3)
@@ -214,12 +223,12 @@ function StatsPanel:draw()
     love.graphics.print("✦", cx + 3, cy + 1) -- coin glyph
     -- label
     love.graphics.setColor(C.label)
-    love.graphics.setFont(love.graphics.newFont(9))
+    love.graphics.setFont(spGetFont(9))
     love.graphics.print("GOLD", cx + ICON_SIZE + 6, cy + 1)
     -- value
     local goldVal = tostring(player.gold or 0)
     love.graphics.setColor(C.gold)
-    love.graphics.setFont(love.graphics.newFont(11))
+    love.graphics.setFont(spGetFont(11))
     local gw = love.graphics.getFont():getWidth(goldVal)
     love.graphics.print(goldVal, cx + barW - gw, cy)
 
@@ -234,18 +243,18 @@ function StatsPanel:_drawStatRow(cx, cy, barW, row)
     love.graphics.setColor(C.iconBg)
     love.graphics.rectangle("fill", cx, cy + 2, ICON_SIZE, ICON_SIZE, 3, 3)
     love.graphics.setColor(C.border)
-    love.graphics.setFont(love.graphics.newFont(9))
+    love.graphics.setFont(spGetFont(9))
     local iw = love.graphics.getFont():getWidth(row.icon)
     love.graphics.print(row.icon, cx + (ICON_SIZE - iw) / 2, cy + 4)
 
     -- label
     love.graphics.setColor(C.label)
-    love.graphics.setFont(love.graphics.newFont(9))
+    love.graphics.setFont(spGetFont(9))
     love.graphics.print(string.upper(row.label), cx + ICON_SIZE + 6, cy + 5)
 
     -- value (right-aligned)
     love.graphics.setColor(C.value)
-    love.graphics.setFont(love.graphics.newFont(11))
+    love.graphics.setFont(spGetFont(11))
     local vw = love.graphics.getFont():getWidth(val)
     love.graphics.print(val, cx + barW - vw, cy + 4)
 end
