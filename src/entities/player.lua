@@ -16,13 +16,12 @@ function Player.new(bus, cardHand)
 		damage = 1,
 		attack = 1,
 		defence = 0,
-		xp = 0,
+		-- xp = 0,
 		level = 1,
-		gold = 0,
 		inventory = {
 			cards = {},
 			items = {},
-			equipments = {} -- array of equipped items, up to 6 slots
+			equipments = {}
 		}
 	}, Player)
 end

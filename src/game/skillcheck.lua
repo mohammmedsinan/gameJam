@@ -33,6 +33,7 @@ local FLASH_DURATION = 0.35
 local SHAKE_DURATION = 0.4
 local SHAKE_MAGNITUDE = 6
 local NUMBER_OF_ROUNDS = 3
+local BASE_NUMBER_OF_ROUNDS = 3
 
 -- ─────────────────────────────────────────────
 --  Constructor
@@ -71,6 +72,7 @@ function SkillCheck:new(config)
 		result = nil,
 		flashTimer = 0,
 		rounds = config.numberOfRounds or NUMBER_OF_ROUNDS,
+		baseRounds = config.baseNumberOfRounds or NUMBER_OF_ROUNDS,
 		shakeTimer = 0,
 		shakeOffset = {
 			x = 0,
@@ -98,6 +100,14 @@ function SkillCheck:update(dt)
 	end
 
 	self.pointerAngle = self.pointerAngle + self.pointerSpeed * dt
+
+	if self.rounds > 0 and self.spawn and self.pointerAngle % TWO_PI < ((self.baseRounds + 1) / 100) then
+		self.rounds = self.rounds - 1
+		if self.rounds == 0 then
+			self.spawn = false
+			self.result = nil
+		end
+	end
 
 	if self.flashTimer > 0 then
 		self.flashTimer = self.flashTimer - dt
@@ -131,8 +141,12 @@ function SkillCheck:draw()
 	self.x = TvScreen.width / 2 + self.shakeOffset.x
 	self.y = TvScreen.height / 2 + self.shakeOffset.y
 	self.radius = TvScreen.width / 8
-
 	self:_drawSkillCheck()
+
+	-- set font bigger
+	love.graphics.setFont(love.graphics.newFont(60))
+	love.graphics.setColor(1, 1, 1, 1)
+	love.graphics.print(self.rounds .. "x", self.x - 40, self.y - 20)
 end
 
 -- ─────────────────────────────────────────────

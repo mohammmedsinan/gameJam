@@ -39,6 +39,7 @@ function CardHand.new(opts)
 	self.x             = opts.x or 0
 	self.y             = opts.y or 0
 	self.width         = opts.width or 600
+	self.height        = opts.height
 	self.cardWidth     = opts.cardWidth or 100
 	self.cardHeight    = opts.cardHeight or 140
 	self.cards         = {}
@@ -154,8 +155,40 @@ function CardHand:_reflow()
 
 	if self.layout == "fan" then
 		self:_reflowFan()
+	elseif self.layout == "straight" then
+		self:_reflowStraight()
 	else
 		self:_reflowGrid()
+	end
+end
+
+function CardHand:_reflowStraight()
+	local n = #self.cards
+	if n == 0 then return end
+
+	local sw, sh = love.graphics.getDimensions()
+	local gapX = 25
+	local maxW = math.floor((self.width - (n - 1) * gapX) / n)
+	local maxH = self.height and (self.height - 40) or sh
+	local wFromH = math.floor(maxH / 1.4)
+
+	self.cardWidth = math.max(80, math.min(240, math.min(maxW, wFromH)))
+	self.cardHeight = math.floor(self.cardWidth * 1.4)
+
+	for _, card in ipairs(self.cards) do
+		card:setSize(self.cardWidth, self.cardHeight)
+	end
+
+	local spacing = self.cardWidth + gapX
+	local totalW = spacing * (n - 1)
+	local startX = self.x - totalW / 2
+
+	for i, card in ipairs(self.cards) do
+		local cx = startX + (i - 1) * spacing
+		local cy = self.y
+		card:setPosition(cx, cy)
+		card:setRotation(0)
+		card.zIndex = i
 	end
 end
 

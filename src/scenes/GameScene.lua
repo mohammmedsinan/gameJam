@@ -7,6 +7,8 @@ local DamageNumbers = require("src/utils/damage_numbers")
 local MultAnim = require("src/utils/multi_animation")
 local CardHand = require("src/ui/CardHand")
 local DungeonShader = require("src/utils/DungeonShader")
+local combat = require("src/utils/game_combat")
+local StatsPanel = require("src/ui/StatsPanel")
 
 Player = require("src/entities/player");
 Boss = require("src/entities/boss");
@@ -16,6 +18,7 @@ bus = Signal.new()
 local GameScene = {}
 local shake, dmg
 local cardHand
+local statsPanel
 
 GameScene.__index = GameScene
 
@@ -39,11 +42,14 @@ function GameScene:load()
 	chatBox:load()
 	shopper:load()
 	player:load()
+	combat:load()
 	if SK then
 		SK:load()
 	end
 	-- ── Card Hand ────────────────────────────────────────────────────────
 	cardHand:setCards(player:getInventoryCards())
+	-- ── Stats Panel ──────────────────────────────────────────────────────
+	statsPanel = StatsPanel.new()
 	shake = CameraShake.new({
 		max_offset_x = 50,
 		max_offset_y = 40,
@@ -67,6 +73,9 @@ function GameScene:update(dt)
 	bus:flush()
 	dmg:update(dt)
 	cardHand:update(dt)
+	if statsPanel then
+		statsPanel:update(dt)
+	end
 	if SK then
 		SK:update(dt)
 	end
@@ -87,6 +96,10 @@ function GameScene:draw()
 		SK:draw()
 	end
 	shake:pop()
+	-- draw HUD on top (outside camera shake)
+	if statsPanel then
+		statsPanel:draw()
+	end
 end
 
 function GameScene:keypressed(key)

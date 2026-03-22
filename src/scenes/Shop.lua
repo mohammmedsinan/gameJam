@@ -1,18 +1,3 @@
--------------------------------------------------------------------------------
--- Shop.lua  –  Balatro-style Shopper Scene
--- Layout:
---   ┌─────────────────────────────────────────────────┐
---   │                  THE SHOPPER                     │
---   │ ┌─────────────────────────────────────────────┐ │
---   │ │         Cards (Artifact) – 4 per shop       │ │
---   │ └─────────────────────────────────────────────┘ │
---   │ ┌────────────────────┐  ┌────────────────────┐ │
---   │ │   Equipment        │  │   Leveling & XP    │ │
---   │ │   2 per shop       │  │   Level up w/ gold │ │
---   │ └────────────────────┘  └────────────────────┘ │
---   │                  [Leave Shop]                    │
---   └─────────────────────────────────────────────────┘
--------------------------------------------------------------------------------
 local love             = require("love")
 local CardHand         = require("src/ui/CardHand")
 local CardHandler      = require("src/utils/card")
@@ -22,9 +7,6 @@ local DungeonShader    = require("src/utils/DungeonShader")
 local Shop             = {}
 Shop.__index           = Shop
 
--------------------------------------------------------------------------------
--- Color palette (Balatro-inspired warm orange + dark)
--------------------------------------------------------------------------------
 local C                = {
 	bg         = { 0.07, 0.07, 0.09, 1 },
 	panelBg    = { 0.12, 0.12, 0.15, 0.95 },
@@ -100,7 +82,7 @@ local function computeLayout()
 	L.cardsX = L.outerX + innerPad
 	L.cardsY = L.outerY + 50
 	L.cardsW = L.outerW - innerPad * 2
-	L.cardsH = 195
+	L.cardsH = math.floor(L.outerH * 0.45)
 
 	-- Bottom row
 	local bottomY = L.cardsY + L.cardsH + sectionPad
@@ -222,12 +204,13 @@ function Shop:load()
 
 	-- Create card hand (positioned inside the cards panel)
 	cardHand = CardHand.new({
-		layout        = "fan",
+		layout        = "straight",
 		x             = L.cardsX + L.cardsW / 2,
-		y             = L.cardsY + L.cardsH / 2 + 22,
-		width         = L.cardsW - 80,
-		cardWidth     = 90,
-		cardHeight    = 126,
+		y             = L.cardsY + L.cardsH / 2,
+		width         = L.cardsW - 40,
+		height        = L.cardsH - 20,
+		cardWidth     = 100,
+		cardHeight    = 140,
 		fanArc        = math.pi / 8,
 		onCardClicked = function(card)
 			-- Buying a card
@@ -360,13 +343,14 @@ function Shop:draw()
 	-- Equipment items
 	local fh = font:getHeight()
 	for i, eq in ipairs(shopEquipment) do
-		local eqY = L.equipY + 40 + (i - 1) * 90
+		local panelHeight = 100
+		local eqY = L.equipY + 40 + (i - 1) * panelHeight
 		local isHov = (hoveredEquipIdx == i)
 
 		-- Equipment card background
 		local eqBg = isHov and { 0.16, 0.16, 0.20, 0.95 } or { 0.11, 0.11, 0.14, 0.9 }
 		local rc = RARITY_COLORS[eq.rarity] or { 0.6, 0.6, 0.6 }
-		drawPanel(L.equipX + 10, eqY, L.equipW - 20, 80, eqBg,
+		drawPanel(L.equipX + 10, eqY, L.equipW - 20, panelHeight, eqBg,
 			{ rc[1], rc[2], rc[3], isHov and 0.9 or 0.5 }, 6)
 
 		-- Name (rarity colored)
@@ -386,7 +370,7 @@ function Shop:draw()
 
 		-- Price + buy button
 		love.graphics.setColor(C.gold)
-		love.graphics.print("$" .. eq.price, L.equipX + 20, eqY + 56)
+		love.graphics.print("$" .. eq.price, L.equipX + 20, eqY + 70)
 
 		local canBuy = false
 		if player then
@@ -474,7 +458,7 @@ function Shop:draw()
 	local canLevel = playerGold >= levelUpCost
 	drawButton("level_up",
 		centerX - 70, contentY,
-		140, 30,
+		170, 50,
 		canLevel and ("Level Up ($" .. levelUpCost .. ")") or "Not enough gold",
 		canLevel)
 
@@ -485,8 +469,8 @@ function Shop:draw()
 
 	-- ── Reroll button (next to leave) ──
 	drawButton("reroll",
-		L.leaveX - 140, L.leaveY,
-		120, L.leaveH,
+		L.leaveX - 160, L.leaveY,
+		140, L.leaveH,
 		"Reroll ($10)", playerGold >= 10)
 
 	love.graphics.setColor(1, 1, 1, 1)
@@ -560,8 +544,9 @@ function Shop:resize(w, h)
 	computeLayout()
 	if cardHand then
 		cardHand.x = L.cardsX + L.cardsW / 2
-		cardHand.y = L.cardsY + L.cardsH / 2 + 22
-		cardHand.width = L.cardsW - 80
+		cardHand.y = L.cardsY + L.cardsH / 2
+		cardHand.width = L.cardsW - 40
+		cardHand.height = L.cardsH - 20
 		cardHand:_reflow()
 	end
 end

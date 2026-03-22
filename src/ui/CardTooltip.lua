@@ -121,6 +121,7 @@ function CardTooltip:draw()
     local tooltipWidth = math.max(160, math.floor(sw * 0.15))
     local fontSize     = math.max(12, math.floor(sh * 0.022))
     local font         = getFont(fontSize)
+    local prevFont     = love.graphics.getFont()
     love.graphics.setFont(font)
     local fh         = font:getHeight()
 
@@ -199,6 +200,7 @@ function CardTooltip:draw()
     love.graphics.print("$ " .. (data.price or 0), cx, cy)
 
     love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setFont(prevFont)
 end
 
 return CardTooltip

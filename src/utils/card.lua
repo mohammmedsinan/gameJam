@@ -372,6 +372,7 @@ function CardHandler:_renderCardFace()
 
 	love.graphics.setCanvas(self._canvas)
 	love.graphics.clear(0, 0, 0, 0)
+	local prevFont = love.graphics.getFont()
 
 	-- ── Background fill ──
 	local bg = RARITY_BG_COLORS[self.rarity] or { 0.15, 0.15, 0.18, 1 }
@@ -458,6 +459,7 @@ function CardHandler:_renderCardFace()
 	-- 	love.graphics.setLineWidth(1)
 	-- end
 
+	love.graphics.setFont(prevFont)
 	love.graphics.setCanvas()
 end
 

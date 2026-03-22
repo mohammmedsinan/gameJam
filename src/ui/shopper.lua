@@ -109,12 +109,12 @@ function shopper:draw()
 			.height, 6, 6)
 	end
 
-	if player then
-		love.graphics.setColor(0.9, 0.9, 0.9, 1)
-		local unlockedSlots = math.min(6, player.level)
-		local title = "Equipment (Unlocked: " .. unlockedSlots .. "/6)"
-		love.graphics.print(title, ShopperScreen.posX + 10, ShopperScreen.posY + 5)
-	end
+	-- if player then
+	-- 	love.graphics.setColor(0.9, 0.9, 0.9, 1)
+	-- 	local unlockedSlots = math.min(6, player.level)
+	-- 	local title = "Equipment (Unlocked: " .. unlockedSlots .. "/6)"
+	-- 	love.graphics.print(title, ShopperScreen.posX + 10, ShopperScreen.posY + 5)
+	-- end
 
 	if self.equipHand then
 		self.equipHand:draw()
