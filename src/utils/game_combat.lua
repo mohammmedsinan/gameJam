@@ -163,12 +163,28 @@ function combat:_getCurrentEncounter()
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
---  Load encounter into boss
+--  Load encounter into boss (applies difficulty scaling by progression)
+--  Stage 1 = easy (0.5x), Stage 5 = moderate (1.25x), Stage 10 = hard (2.5x)
 -- ─────────────────────────────────────────────────────────────────────────────
+function combat:_getDifficultyScale()
+    -- Linear ramp: stage 1 → 0.5, stage 10 → 2.5
+    local progress = (self.currentStageIdx - 1) / math.max(1, #self.stageOrder - 1)
+    return 0.5 + progress * 2.0
+end
+
 function combat:_loadEncounter()
     local enc = self:_getCurrentEncounter()
     if enc and self.boss then
-        self.boss:setFromEncounter(enc)
+        local scale = self:_getDifficultyScale()
+        local scaled = {
+            name    = enc.name,
+            health  = math.max(1, math.floor(enc.health * scale)),
+            attack  = math.max(1, math.floor(enc.attack * scale)),
+            defence = math.max(0, math.floor((enc.defence or 0) * scale)),
+            effect  = enc.effect,
+            isBoss  = enc.isBoss,
+        }
+        self.boss:setFromEncounter(scaled)
     end
 end
 

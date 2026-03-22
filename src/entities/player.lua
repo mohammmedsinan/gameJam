@@ -33,7 +33,7 @@ function Player:load()
 	cardsData = json.decode(cardsContent)
 	if cardsData then
 		for _, card in ipairs(cardsData) do
-			if card.id == 3 then
+			if card.id == 3 or card.id == 4 then
 				self:addCardToInventory(card)
 			end
 		end
