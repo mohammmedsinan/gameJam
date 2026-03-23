@@ -133,14 +133,15 @@ function CardTooltip:draw()
         for _ in pairs(data.stats) do statsCount = statsCount + 1 end
     end
 
-    local contentH = fh   -- name
-        + fh * 0.6        -- rarity label
-        + 4               -- spacing
-        + #descLines * fh -- description
-        + 6               -- spacing
-        + statsCount * fh -- stats rows
-        + fh              -- price
-        + 4               -- bottom pad
+    local contentH = fh              -- name
+        + fh * 0.6                   -- rarity label
+        + 4                          -- spacing
+        + #descLines * fh            -- description
+        + 6                          -- spacing
+        + statsCount * fh            -- stats rows
+        + fh                         -- price
+        + (data.isOwned and fh or 0) -- sell hint
+        + 4                          -- bottom pad
 
     local tooltipH = contentH + PADDING * 2
 
@@ -198,6 +199,14 @@ function CardTooltip:draw()
     -- Price
     love.graphics.setColor(1, 0.85, 0.20, self._alpha)
     love.graphics.print("$ " .. (data.price or 0), cx, cy)
+    cy = cy + fh
+
+    -- Sell Hint
+    if data.isOwned then
+        love.graphics.setColor(0.55, 0.55, 0.55, self._alpha)
+        love.graphics.print("(Right-Click to Sell)", cx, cy)
+        cy = cy + fh
+    end
 
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.setFont(prevFont)

@@ -1,11 +1,12 @@
 local CrTv = require("src/ui/CrTv");
 local json = require("src/utils/json");
+local CharacterFX = require("src/utils/character_fx")
 
 local Player = {}
 Player.__index = Player
 
 function Player.new(bus, cardHand)
-	return setmetatable({
+	local self = setmetatable({
 		name = "player",
 		bus = bus,
 		cardHand = cardHand,
@@ -18,6 +19,7 @@ function Player.new(bus, cardHand)
 		defence = 0,
 		-- xp = 0,
 		level = 1,
+		gold = 0, -- persistent gold; earned by defeating enemies
 		drawX = 0,
 		drawY = 0,
 		inventory = {
@@ -26,6 +28,24 @@ function Player.new(bus, cardHand)
 			equipments = {}
 		}
 	}, Player)
+	-- Character visual effects (cool blue/cyan energy)
+	self.cfx = CharacterFX.new({
+		color = { 0.3, 0.7, 1.0 },
+		intensity = 1.0,
+	})
+	return self
+end
+
+function Player:addGold(amount)
+	self.gold = self.gold + (amount or 0)
+end
+
+function Player:spendGold(amount)
+	if self.gold >= amount then
+		self.gold = self.gold - amount
+		return true
+	end
+	return false
 end
 
 function Player:load()
@@ -33,7 +53,7 @@ function Player:load()
 	cardsData = json.decode(cardsContent)
 	if cardsData then
 		for _, card in ipairs(cardsData) do
-			if card.id == 3 then
+			if card.id == 2 or card.id == 3 then
 				self:addCardToInventory(card)
 			end
 		end
@@ -42,6 +62,7 @@ end
 
 function Player:addCardToInventory(cardData)
 	if not self:hasCardInInventory(cardData.id) then
+		cardData.isOwned = true
 		table.insert(self.inventory.cards, cardData)
 		self.cardHand:setCards(player:getInventoryCards())
 	end
@@ -54,6 +75,19 @@ end
 function Player:hasCardInInventory(cardId)
 	for _, card in ipairs(self.inventory.cards) do
 		if card.id == cardId then
+			return true
+		end
+	end
+	return false
+end
+
+function Player:removeCardFromInventory(cardId)
+	for i, card in ipairs(self.inventory.cards) do
+		if card.id == cardId then
+			table.remove(self.inventory.cards, i)
+			if self.cardHand then
+				self.cardHand:setCards(self.inventory.cards)
+			end
 			return true
 		end
 	end
@@ -90,19 +124,22 @@ function Player:unequipItem(index)
 end
 
 function Player:update(dt)
+	if self.cfx then self.cfx:update(dt) end
+end
+
+function Player:setVisualState(state)
+	if self.cfx then self.cfx:setState(state) end
 end
 
 function Player:draw()
-	love.graphics.setColor(1, 1, 1, 1)
 	local CrTvScreen = CrTv:getCrTvScreenDetails();
 	self.drawX = CrTvScreen.border.left + 100
 	self.drawY = CrTvScreen.border.bottom - 100
-	love.graphics.rectangle("fill", self.drawX, self.drawY, self.width,
-		self.height)
-	-- red color for the border
-	love.graphics.setColor(1, 0, 0, 1)
-	love.graphics.rectangle("line", self.drawX, self.drawY, self.width,
-		self.height)
+
+	-- Draw character with shader + particles (replaces plain rectangle)
+	if self.cfx then
+		self.cfx:draw(self.drawX, self.drawY, self.width, self.height)
+	end
 end
 
 function Player:keypressed(key)

@@ -87,20 +87,18 @@ end
 --  Load
 -- ─────────────────────────────────────────────────────────────────────────────
 function combat:load()
+    -- Load audio
+    self.sfxSkillCheckStart = love.audio.newSource("assets/audio/sfx/SkillCheckStart.wav", "static")
+
     -- Load stages
     local raw = love.filesystem.read("src/entities/stages.json")
     local data = json.decode(raw)
     self.allStages = data and data.stages or {}
 
-    -- Generate random stage order
+    -- Play stages in order (sorted by difficulty in stages.json)
     self.stageOrder = {}
     for i = 1, #self.allStages do
         self.stageOrder[i] = i
-    end
-    -- Fisher-Yates shuffle
-    for i = #self.stageOrder, 2, -1 do
-        local j = love.math.random(1, i)
-        self.stageOrder[i], self.stageOrder[j] = self.stageOrder[j], self.stageOrder[i]
     end
 
     -- Progress tracking
@@ -133,6 +131,8 @@ function combat:load()
     self.dmg                 = nil
     self.multAnim            = nil
     self.SK                  = nil
+    self.fx                  = nil
+    self.cardHand            = nil
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -144,6 +144,22 @@ function combat:setRefs(playerRef, bossRef, shakeRef, dmgRef, multAnimRef)
     self.shake    = shakeRef
     self.dmg      = dmgRef
     self.multAnim = multAnimRef
+end
+
+function combat:setFXRef(fxRef)
+    self.fx = fxRef
+end
+
+function combat:setCardHandRef(handRef)
+    self.cardHand = handRef
+end
+
+-- Helper: trigger the card activation animation in the sidebar.
+-- effectType is the card.effect string (e.g. "chain_mult").
+function combat:_triggerCard(effectType)
+    if self.cardHand and effectType then
+        self.cardHand:triggerEffect(effectType)
+    end
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -167,9 +183,10 @@ end
 --  Stage 1 = easy (0.5x), Stage 5 = moderate (1.25x), Stage 10 = hard (2.5x)
 -- ─────────────────────────────────────────────────────────────────────────────
 function combat:_getDifficultyScale()
-    -- Linear ramp: stage 1 → 0.5, stage 10 → 2.5
+    -- Gentle ramp: stage 1 → 0.8, stage 10 → 1.4
+    -- (stages.json already has escalating base stats)
     local progress = (self.currentStageIdx - 1) / math.max(1, #self.stageOrder - 1)
-    return 0.5 + progress * 2.0
+    return 0.8 + progress * 0.6
 end
 
 function combat:_loadEncounter()
@@ -331,8 +348,17 @@ function combat:_spawnSkillCheck()
     local finalGreat   = cfg.greatArcSize * bonuses.greatArcMult
     local finalRounds  = 3 + bonuses.extraRounds
 
-    local selfRef      = self
-    self.SK            = SkillCheck:new({
+    -- ── Visual state: player attacks or parries ──────────────────────────
+    if isParry then
+        if self.player then self.player:setVisualState("idle") end
+        if self.boss then self.boss:setVisualState("attack") end
+    else
+        if self.player then self.player:setVisualState("attack") end
+        if self.boss then self.boss:setVisualState("idle") end
+    end
+
+    local selfRef = self
+    self.SK       = SkillCheck:new({
         successArcSize = finalSuccess,
         greatArcSize   = finalGreat,
         pointerSpeed   = finalSpeed,
@@ -352,6 +378,11 @@ function combat:_spawnSkillCheck()
         end,
     })
     self.SK:Spawn()
+
+    if self.sfxSkillCheckStart then
+        self.sfxSkillCheckStart:stop()
+        self.sfxSkillCheckStart:play()
+    end
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -371,6 +402,8 @@ function combat:_onSkillCheckResult(quality, rounds)
             local tx, ty = isParry and (self.player.drawX or 0) or bs.x,
                 isParry and (self.player.drawY or 0) or bs.y
             self.dmg:spawn(tx, ty - 30, 0, "xp", { prefix = "LUCKY! " })
+            if self.fx then self.fx:burst("lucky", tx, ty) end
+            self:_triggerCard("miss_reroll")
         end
     end
 
@@ -380,6 +413,8 @@ function combat:_onSkillCheckResult(quality, rounds)
         local px = self.player.drawX or 0
         local py = self.player.drawY or 0
         self.dmg:spawn(px, py, bonuses.missPenalty, "normal", { prefix = "PENALTY! " })
+        if self.fx then self.fx:burst("penalty", px, py) end
+        self:_triggerCard("double_down")
     end
 
     local results = isParry and self.parryResults or self.attackResults
@@ -401,9 +436,11 @@ function combat:_onSkillCheckResult(quality, rounds)
                 end
             end
             chainBonus = streak * bonuses.chainMult
+            if chainBonus > 0 then self:_triggerCard("chain_mult") end
         end
 
         if quality == "great" then
+            if self.boss then self.boss:setVisualState("damage") end
             self.shake:add_trauma(1)
             local multChain = {}
             for i = 1, math.max(1, rounds) + chainBonus do
@@ -412,6 +449,7 @@ function combat:_onSkillCheckResult(quality, rounds)
             self.multAnim.spawnChain(bs.x, bs.y, multChain, function()
                 local dmgVal = self:_calcSingleAttack(quality, rounds)
                 self.dmg:spawn(bs.x, bs.y, math.floor(dmgVal), "crit")
+                if self.fx then self.fx:burst("great", bs.x, bs.y) end
                 -- ── Lifesteal on Great ────────────────────────────────────
                 if bonuses.lifestealPct > 0 and self.player then
                     local healAmt = math.floor(dmgVal * bonuses.lifestealPct)
@@ -420,6 +458,8 @@ function combat:_onSkillCheckResult(quality, rounds)
                         local px = self.player.drawX or 0
                         local py = self.player.drawY or 0
                         self.dmg:spawn(px, py, healAmt, "heal")
+                        if self.fx then self.fx:burst("heal", px, py) end
+                        self:_triggerCard("lifesteal_great")
                     end
                 end
                 -- ── Siphon Soul: steal enemy defence on Great ─────────────
@@ -427,9 +467,12 @@ function combat:_onSkillCheckResult(quality, rounds)
                     self.boss.defence = math.max(0, (self.boss.defence or 0) - bonuses.defSteal)
                     self.dmg:spawn(bs.x, bs.y - 20, bonuses.defSteal, "xp",
                         { prefix = "-", suffix = " DEF" })
+                    if self.fx then self.fx:burst("stun", bs.x, bs.y - 20) end
+                    self:_triggerCard("siphon_soul")
                 end
             end)
         elseif quality == "success" then
+            if self.boss then self.boss:setVisualState("damage") end
             self.shake:add_trauma(0.4)
             local multChain = { rounds }
             for i = 1, chainBonus do
@@ -438,10 +481,12 @@ function combat:_onSkillCheckResult(quality, rounds)
             self.multAnim.spawnChain(bs.x, bs.y, multChain, function()
                 local dmgVal = self:_calcSingleAttack(quality, rounds)
                 self.dmg:spawn(bs.x, bs.y, math.floor(dmgVal), "normal")
+                if self.fx then self.fx:burst("success", bs.x, bs.y) end
             end)
         else
             self.shake:add_trauma(0.2)
             self.dmg:spawn(bs.x, bs.y, 0, "miss")
+            if self.fx then self.fx:burst("miss", bs.x, bs.y) end
         end
     else
         -- ── Parry feedback ───────────────────────────────────────────────
@@ -450,21 +495,33 @@ function combat:_onSkillCheckResult(quality, rounds)
         if quality ~= "miss" then
             local parryVal = self:_calcSingleParry(quality, rounds)
             self.dmg:spawn(px, py, math.floor(parryVal), "shield")
+            if self.fx then self.fx:burst("shield", px, py) end
+            if quality == "great" then
+                self:_triggerCard("flat_parry")
+                self:_triggerCard("fortify")
+            end
             -- ── Counter Hit: damage enemy on successful parry ────────────
             if bonuses.counterDmg > 0 and self.boss then
                 self.boss.health = math.max(0, self.boss.health - bonuses.counterDmg)
                 self.dmg:spawn(bs.x, bs.y, bonuses.counterDmg, "normal")
+                if self.fx then self.fx:burst("counter", bs.x, bs.y) end
+                self:_triggerCard("counter_hit")
             end
             -- ── Stun: mark great parries for stun reduction ──────────────
             if quality == "great" and bonuses.stunReduction > 0 then
                 self._hasStunParry = true
+                if self.fx then self.fx:burst("stun", bs.x, bs.y) end
+                self:_triggerCard("stun_parry")
             end
             -- ── Reflect: mark great parries for reflect ──────────────────
             if quality == "great" and bonuses.reflectPct > 0 then
                 self._hasReflectParry = true
+                if self.fx then self.fx:burst("reflect", bs.x, bs.y) end
+                self:_triggerCard("reflect_great")
             end
         else
             self.dmg:spawn(px, py, 0, "miss")
+            if self.fx then self.fx:burst("shield_miss", px, py) end
         end
     end
 end
@@ -573,6 +630,8 @@ function combat:_onSkillCheckDespawn()
                     local bs = self.boss:details()
                     self.dmg:spawn(bs.x, bs.y - 30, math.floor(echoDmg), "crit",
                         { prefix = "ECHO! " })
+                    if self.fx then self.fx:burst("echo", bs.x, bs.y) end
+                    self:_triggerCard("echo_strike")
                 end
             end
             -- ── Combo King: if ALL 3 checks hit, apply combo multiplier ──
@@ -588,6 +647,8 @@ function combat:_onSkillCheckDespawn()
                     local bs = self.boss:details()
                     self.dmg:spawn(bs.x, bs.y - 40, math.floor(self.totalDamage), "crit",
                         { prefix = "COMBO! " })
+                    if self.fx then self.fx:burst("combo", bs.x, bs.y) end
+                    self:_triggerCard("full_combo")
                 end
             end
             -- ── Doppelganger: ghost hit at % of total ────────────────────
@@ -598,6 +659,8 @@ function combat:_onSkillCheckDespawn()
                     local bs = self.boss:details()
                     self.dmg:spawn(bs.x + 20, bs.y - 10, ghostDmg, "normal",
                         { prefix = "GHOST! " })
+                    if self.fx then self.fx:burst("ghost", bs.x, bs.y) end
+                    self:_triggerCard("doppelganger")
                 end
             end
             self.totalDamage = math.floor(self.totalDamage)
@@ -605,6 +668,9 @@ function combat:_onSkillCheckDespawn()
             if bonuses.bleedDmg > 0 and self.totalDamage > 0 then
                 self._bleedStacks = (self._bleedStacks or 0) + bonuses.bleedDmg
                 self._bleedRoundsLeft = bonuses.bleedRounds
+                local bs = self.boss:details()
+                if self.fx then self.fx:burst("bleed", bs.x, bs.y) end
+                self:_triggerCard("bleed")
             end
             -- Apply damage to boss
             if self.boss then
@@ -640,6 +706,8 @@ function combat:_onSkillCheckDespawn()
                 local px = self.player.drawX or 0
                 local py = self.player.drawY or 0
                 self.dmg:spawn(px, py, bonuses.healPerTurn, "heal")
+                if self.fx then self.fx:burst("heal", px, py) end
+                self:_triggerCard("heal_per_turn")
             end
             -- ── Witch's Brew: coin flip heal or hurt ─────────────────────
             if bonuses.hasWitchsBrew and self.player then
@@ -650,10 +718,14 @@ function combat:_onSkillCheckDespawn()
                         self.player.health + bonuses.witchsHeal)
                     self.dmg:spawn(px, py, bonuses.witchsHeal, "heal",
                         { prefix = "BREW! +" })
+                    if self.fx then self.fx:burst("brew_heal", px, py) end
+                    self:_triggerCard("witchs_brew")
                 else
                     self.player.health = math.max(0, self.player.health - bonuses.witchsPenalty)
                     self.dmg:spawn(px, py, bonuses.witchsPenalty, "normal",
                         { prefix = "BREW! " })
+                    if self.fx then self.fx:burst("brew_hurt", px, py) end
+                    self:_triggerCard("witchs_brew")
                 end
             end
             -- Move to enemy turn
@@ -727,6 +799,20 @@ function combat:_advanceEncounter()
             { prefix = "+", suffix = " MAX HP" })
     end
 
+    -- ── Gold Drop: reward player with gold for the kill ───────────────────
+    if self.player then
+        local enc = self:_getCurrentEncounter()
+        local goldDrop
+        if enc and enc.isBoss then
+            goldDrop = 60 + self.currentStageIdx * 10
+        else
+            goldDrop = 20 + self.currentStageIdx * 5
+        end
+        self.player:addGold(goldDrop)
+        self.dmg:spawn(px, py - 40, goldDrop, "xp",
+            { prefix = "+", suffix = " GOLD" })
+    end
+
     -- Reset bleed stacks on kill
     self._bleedStacks = 0
     self._bleedRoundsLeft = 0
@@ -744,6 +830,9 @@ function combat:_advanceEncounter()
         else
             self.state = STATE.GAME_COMPLETE
         end
+        -- Reset visuals to idle between encounters
+        if self.player then self.player:setVisualState("idle") end
+        if self.boss then self.boss:setVisualState("idle") end
     end
 end
 
@@ -833,6 +922,8 @@ function combat:_startNewRound()
             local bs = self.boss:details()
             self.dmg:spawn(bs.x, bs.y, self._bleedStacks, "crit",
                 { prefix = "BLEED! " })
+            if self.fx then self.fx:burst("bleed_tick", bs.x, bs.y) end
+            self:_triggerCard("bleed")
         end
         self._bleedRoundsLeft = self._bleedRoundsLeft - 1
         if self._bleedRoundsLeft <= 0 then
@@ -857,6 +948,10 @@ function combat:_executeEnemyAttack()
     local enc = self:_getCurrentEncounter()
     if not enc then return end
     local bonuses = self:_getCardBonuses()
+
+    -- ── Visual state: enemy attacks, player takes damage ─────────────────
+    self.boss:setVisualState("attack")
+    self.player:setVisualState("damage")
 
     local enemyAtk = enc.attack
     -- ── Shield Bash stun: reduce enemy attack if great parry landed ──────
@@ -897,6 +992,8 @@ function combat:_executeEnemyAttack()
             self.player.health = reviveHP
             self.shake:add_trauma(1)
             self.dmg:spawn(px, py, reviveHP, "heal", { prefix = "PHOENIX! +" })
+            if self.fx then self.fx:burst("phoenix", px, py) end
+            self:_triggerCard("phoenix")
             self.state = STATE.RESOLUTION
             self.resolutionTimer = 0
         else
@@ -905,6 +1002,9 @@ function combat:_executeEnemyAttack()
     else
         self.state = STATE.RESOLUTION
         self.resolutionTimer = 0
+        -- Return to idle visuals after resolution
+        self.player:setVisualState("idle")
+        self.boss:setVisualState("idle")
     end
 end
 

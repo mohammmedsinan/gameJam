@@ -7,6 +7,7 @@ local MultAnim = require("src/utils/multi_animation")
 local CardHand = require("src/ui/CardHand")
 local DungeonShader = require("src/utils/DungeonShader")
 local combat = require("src/utils/game_combat")
+local CardFX = require("src/utils/card_fx")
 local StatsPanel = require("src/ui/StatsPanel")
 
 Player = require("src/entities/player");
@@ -15,7 +16,7 @@ Signal = require("src/utils/signal")
 
 bus = Signal.new()
 local GameScene = {}
-local shake, dmg
+local shake, dmg, fx
 local cardHand
 local statsPanel
 
@@ -24,14 +25,21 @@ GameScene.__index = GameScene
 function GameScene:load()
 	local handArea = chatBox:getChatBoxScreenDetails()
 	cardHand = CardHand.new({
-		layout        = "nfan",
-		x             = handArea.posX + 20,
-		y             = handArea.posY + 20,
-		width         = handArea.width - 20,
-		cardWidth     = 80,
-		cardHeight    = 112,
-		onCardClicked = function(card)
+		layout             = "nfan",
+		x                  = handArea.posX + 20,
+		y                  = handArea.posY + 20,
+		width              = handArea.width - 20,
+		cardWidth          = 80,
+		cardHeight         = 112,
+		onCardClicked      = function(card)
 			print("[Card Clicked] " .. card.name .. " (" .. card:getRarityName() .. ")")
+		end,
+		onCardRightClicked = function(card)
+			if player and card.price then
+				player:addGold(card.price)
+				player:removeCardFromInventory(card.id)
+				print("[Card Sold] " .. card.name .. " for $" .. card.price)
+			end
 		end,
 	})
 	boss = Boss.new(bus)
@@ -56,9 +64,13 @@ function GameScene:load()
 		pivot_y      = 300,
 	})
 
+	-- ── Card FX ──────────────────────────────────────────────────────────
+	fx = CardFX.new()
 	-- ── Combat Engine ────────────────────────────────────────────────────
 	combat:load()
 	combat:setRefs(player, boss, shake, dmg, MultAnim)
+	combat:setFXRef(fx)
+	combat:setCardHandRef(cardHand)
 end
 
 function GameScene:update(dt)
@@ -72,6 +84,7 @@ function GameScene:update(dt)
 	MultAnim.update(dt)
 	bus:flush()
 	dmg:update(dt)
+	fx:update(dt)
 	cardHand:update(dt)
 	if statsPanel then
 		statsPanel:update(dt)
@@ -90,6 +103,7 @@ function GameScene:draw()
 	boss:draw()
 	dmg:draw()
 	MultAnim.draw()
+	fx:draw()
 	cardHand:draw()
 	-- ── Combat Engine Draw (on top of game world, inside shake) ──────────
 	combat:draw()

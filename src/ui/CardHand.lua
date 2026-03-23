@@ -32,34 +32,35 @@ local REFLOW_SPEED = 8 -- spring-like lerp speed for layout repositioning
 --   opts.onCardHovered function(card, isHovering)
 -------------------------------------------------------------------------------
 function CardHand.new(opts)
-	opts               = opts or {}
-	local self         = setmetatable({}, CardHand)
+	opts                    = opts or {}
+	local self              = setmetatable({}, CardHand)
 
-	self.layout        = opts.layout or "fan"
-	self.x             = opts.x or 0
-	self.y             = opts.y or 0
-	self.width         = opts.width or 600
-	self.height        = opts.height
-	self.cardWidth     = opts.cardWidth or 100
-	self.cardHeight    = opts.cardHeight or 140
-	self.cards         = {}
+	self.layout             = opts.layout or "fan"
+	self.x                  = opts.x or 0
+	self.y                  = opts.y or 0
+	self.width              = opts.width or 600
+	self.height             = opts.height
+	self.cardWidth          = opts.cardWidth or 100
+	self.cardHeight         = opts.cardHeight or 140
+	self.cards              = {}
 
 	-- Fan settings
-	self.fanArc        = opts.fanArc or math.pi / 4
+	self.fanArc             = opts.fanArc or math.pi / 4
 
 	-- Grid settings
-	self.gridCols      = opts.gridCols or 2
-	self.gridSpacingX  = opts.gridSpacingX or 12
-	self.gridSpacingY  = opts.gridSpacingY or 16
+	self.gridCols           = opts.gridCols or 2
+	self.gridSpacingX       = opts.gridSpacingX or 12
+	self.gridSpacingY       = opts.gridSpacingY or 16
 
 	-- Tooltip
-	self._tooltip      = CardTooltip.new()
-	self._hoveredCard  = nil
-	self.draggedCard   = nil
+	self._tooltip           = CardTooltip.new()
+	self._hoveredCard       = nil
+	self.draggedCard        = nil
 
 	-- Callbacks
-	self.onCardClicked = opts.onCardClicked
-	self.onCardHovered = opts.onCardHovered
+	self.onCardClicked      = opts.onCardClicked
+	self.onCardRightClicked = opts.onCardRightClicked
+	self.onCardHovered      = opts.onCardHovered
 
 	return self
 end
@@ -86,10 +87,16 @@ function CardHand:addCard(data)
 		end
 	end
 
-	-- Wire click callback
+	-- Wire click callbacks
 	card.onClick = function(c)
 		if handRef.onCardClicked then
 			handRef.onCardClicked(c)
+		end
+	end
+
+	card.onRightClick = function(c)
+		if handRef.onCardRightClicked then
+			handRef.onCardRightClicked(c)
 		end
 	end
 
@@ -352,6 +359,65 @@ function CardHand:draw()
 
 	-- Tooltip on top of everything
 	self._tooltip:draw()
+end
+
+-------------------------------------------------------------------------------
+-- Activate a card by its effect key (called from the combat engine)
+-- Finds every card whose .effect field matches `effectType` and triggers the
+-- activation animation on it.
+-------------------------------------------------------------------------------
+
+-- Color palette: maps effect category → { r, g, b }
+local EFFECT_COLORS = {
+	-- Attack skill-check mods → gold/orange
+	chain_mult       = { 1.00, 0.75, 0.10 },
+	widen_great      = { 1.00, 0.85, 0.20 },
+	slow_pointer     = { 1.00, 0.85, 0.20 },
+	miss_reroll      = { 1.00, 1.00, 0.20 },
+	extra_rounds     = { 1.00, 0.80, 0.15 },
+	tunnel_vision    = { 1.00, 0.80, 0.15 },
+	overcharge       = { 1.00, 0.60, 0.10 },
+	-- Damage multipliers → red/orange
+	glass_cannon     = { 1.00, 0.30, 0.10 },
+	great_multiplier = { 1.00, 0.50, 0.10 },
+	full_combo       = { 1.00, 0.55, 0.10 },
+	soul_harvest     = { 0.80, 0.20, 0.10 },
+	double_down      = { 1.00, 0.20, 0.20 },
+	echo_strike      = { 0.75, 0.40, 1.00 },
+	resonance        = { 1.00, 0.70, 0.20 },
+	retribution      = { 1.00, 0.30, 0.10 },
+	last_stand       = { 1.00, 0.20, 0.05 },
+	doppelganger     = { 0.65, 0.35, 1.00 },
+	bleed            = { 1.00, 0.10, 0.10 },
+	-- Defense / parry → blue
+	flat_parry       = { 0.40, 0.75, 1.00 },
+	reflect_great    = { 0.70, 0.90, 1.00 },
+	stun_parry       = { 1.00, 1.00, 0.25 },
+	counter_hit      = { 1.00, 0.55, 0.15 },
+	fortify          = { 0.40, 0.80, 1.00 },
+	-- Healing → green
+	heal_per_turn    = { 0.35, 1.00, 0.50 },
+	lifesteal_great  = { 0.35, 1.00, 0.50 },
+	bone_armor       = { 0.35, 0.90, 0.50 },
+	-- Utility/special → purple/gold
+	witchs_brew      = { 0.70, 0.30, 1.00 },
+	phoenix          = { 1.00, 0.55, 0.10 },
+	siphon_soul      = { 0.60, 0.20, 0.90 },
+}
+
+local DEFAULT_ACTIVATE_COLOR = { 1.00, 0.85, 0.45 } -- warm gold fallback
+
+function CardHand:triggerEffect(effectType)
+	if not effectType then return end
+	local color = EFFECT_COLORS[effectType] or DEFAULT_ACTIVATE_COLOR
+	local found = false
+	for _, card in ipairs(self.cards) do
+		if card.effect == effectType then
+			card:activate(color)
+			found = true
+		end
+	end
+	return found
 end
 
 return CardHand

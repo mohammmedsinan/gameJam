@@ -38,11 +38,10 @@ local allCards     -- all card data from JSON
 local allEquipment -- all equipment data from JSON
 
 -- Shop state
-local shopCards        = {}  -- 4 random cards offered this visit
-local shopEquipment    = {}  -- 2 random equipment offered this visit
-local playerGold       = 500 -- demo starting gold
--- using player.level now
-local playerXP         = 35
+local shopCards        = {} -- 4 random cards offered this visit
+local shopEquipment    = {} -- 2 random equipment offered this visit
+-- playerGold is now player.gold (persistent, earned in combat)
+local playerXP         = 0
 local xpToNext         = 100
 local levelUpCost      = 50
 
@@ -171,8 +170,15 @@ local function pickRandom(tbl, count)
 end
 
 local function refreshShop()
-	-- Pick 4 cards
-	shopCards = pickRandom(allCards, 4)
+	-- Pick 4 cards (filter out cards player already owns)
+	local availableCards = {}
+	for _, card in ipairs(allCards) do
+		if not player or not player:hasCardInInventory(card.id) then
+			table.insert(availableCards, card)
+		end
+	end
+
+	shopCards = pickRandom(availableCards, 4)
 	cardHand:clear()
 	for _, data in ipairs(shopCards) do
 		cardHand:addCard(data)
@@ -214,8 +220,8 @@ function Shop:load()
 		fanArc        = math.pi / 8,
 		onCardClicked = function(card)
 			-- Buying a card
-			if playerGold >= card.price then
-				playerGold = playerGold - card.price
+			if player and player.gold >= card.price then
+				player:spendGold(card.price)
 				cardHand:removeCard(card.id)
 				-- Remove from shopCards
 				for i, sc in ipairs(shopCards) do
@@ -306,7 +312,8 @@ function Shop:draw()
 
 	-- ── Gold display ──
 	love.graphics.setColor(C.gold[1], C.gold[2], C.gold[3], alpha)
-	love.graphics.print("Gold: " .. playerGold, L.outerX + L.outerW - 120, L.titleY)
+	local displayGold = player and player.gold or 0
+	love.graphics.print("Gold: " .. displayGold, L.outerX + L.outerW - 120, L.titleY)
 
 	-- ════════════════════════════════════════════════════════════════════
 	-- CARDS SECTION
@@ -376,7 +383,7 @@ function Shop:draw()
 		if player then
 			local currentSlots = #player.inventory.equipments
 			local maxSlots = math.min(6, player.level)
-			canBuy = playerGold >= eq.price and currentSlots < maxSlots
+			canBuy = player.gold >= eq.price and currentSlots < maxSlots
 		end
 
 		drawButton("buy_eq_" .. i,
@@ -455,7 +462,8 @@ function Shop:draw()
 	contentY = contentY + fh + 12
 
 	-- Level up button
-	local canLevel = playerGold >= levelUpCost
+	local playerGoldNow = player and player.gold or 0
+	local canLevel = playerGoldNow >= levelUpCost
 	drawButton("level_up",
 		centerX - 70, contentY,
 		170, 50,
@@ -471,7 +479,7 @@ function Shop:draw()
 	drawButton("reroll",
 		L.leaveX - 160, L.leaveY,
 		140, L.leaveH,
-		"Reroll ($10)", playerGold >= 10)
+		"Reroll ($10)", (player and player.gold or 0) >= 10)
 
 	love.graphics.setColor(1, 1, 1, 1)
 end
@@ -496,20 +504,19 @@ function Shop:mousepressed(x, y, button)
 		if btn.enabled and pointInRect(x, y, btn.x, btn.y, btn.w, btn.h) then
 			if btn.id == "leave_shop" then
 				SceneManager:switch("game", { kind = "fade", duration = 0.3 })
-			elseif btn.id == "reroll" and playerGold >= 10 then
-				playerGold = playerGold - 10
+			elseif btn.id == "reroll" and player and player.gold >= 10 then
+				player:spendGold(10)
 				refreshShop()
 				print("[Shop] Rerolled stock for $10")
-			elseif btn.id == "level_up" and playerGold >= levelUpCost then
-				playerGold = playerGold - levelUpCost
+			elseif btn.id == "level_up" and player and player.gold >= levelUpCost then
+				player:spendGold(levelUpCost)
 				playerXP = playerXP + 25
 				if playerXP >= xpToNext then
 					playerXP = playerXP - xpToNext
-					if player then player.level = player.level + 1 end
+					player.level = player.level + 1
 					xpToNext = math.floor(xpToNext * 1.4)
 					levelUpCost = math.floor(levelUpCost * 1.3)
-					local newLevel = player and player.level or 1
-					print("[Shop] Leveled up to " .. newLevel .. "!")
+					print("[Shop] Leveled up to " .. player.level .. "!")
 				else
 					print("[Shop] Gained 25 XP!")
 				end
@@ -520,9 +527,9 @@ function Shop:mousepressed(x, y, button)
 				local currentSlots = player and #player.inventory.equipments or 0
 				local maxSlots = player and math.min(6, player.level) or 0
 
-				if eq and playerGold >= eq.price and currentSlots < maxSlots then
-					playerGold = playerGold - eq.price
-					if player then player:equipItem(eq) end
+				if eq and player and player.gold >= eq.price and currentSlots < maxSlots then
+					player:spendGold(eq.price)
+					player:equipItem(eq)
 					table.remove(shopEquipment, idx)
 					print("[Shop] Bought equipment: " .. eq.name)
 				end
@@ -533,7 +540,11 @@ function Shop:mousepressed(x, y, button)
 end
 
 function Shop.gainGold(amount)
-	playerGold = playerGold + amount
+	if player then
+		player:addGold(amount)
+	else
+		print("[Shop] gainGold called but player not loaded yet")
+	end
 end
 
 function Shop:mousereleased(x, y, button)

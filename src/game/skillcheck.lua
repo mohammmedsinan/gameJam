@@ -6,6 +6,7 @@ SkillCheck = {}
 --  Constants
 -- ─────────────────────────────────────────────
 local TWO_PI = math.pi * 2
+local TICK_ANGLE = TWO_PI / 64
 
 local DEFAULT_ZONES = {
 	success = {
@@ -43,6 +44,7 @@ local BIG_FONT = love.graphics.newFont(60)
 -- ─────────────────────────────────────────────
 function SkillCheck:new(config)
 	config = config or {}
+
 
 	local TvScreen = CrTv:getCrTvScreenDetails()
 	local newObj = {
@@ -104,7 +106,11 @@ function SkillCheck:update(dt)
 	end
 
 	if not self.result then
+		local oldAngle = self.pointerAngle
 		self.pointerAngle = self.pointerAngle + self.pointerSpeed * dt
+
+		local oldSeg = math.floor(oldAngle / TICK_ANGLE)
+		local newSeg = math.floor(self.pointerAngle / TICK_ANGLE)
 	end
 
 	if self.flashTimer > 0 then

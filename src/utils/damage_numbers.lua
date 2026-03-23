@@ -61,7 +61,7 @@ local TYPES = {
 		rise       = 230,
 		wobble     = 28,
 		chromatic  = true, -- split shadow offset for crit
-		flash      = true, -- screen flash
+		flash      = false, -- screen flash
 	},
 	heal = {
 		color      = { 0.35, 1.00, 0.50 },

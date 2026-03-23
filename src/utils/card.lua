@@ -112,6 +112,7 @@ function CardHandler.new(data)
 	self.name            = data.name or "Card"
 	self.price           = data.price or 0
 	self.type            = data.type or "attack"
+	self.effect          = data.effect or nil -- card effect key (e.g. "chain_mult")
 	self.description     = data.description or ""
 	self.rarity          = math.max(1, math.min(5, data.rarity or 1))
 	self.stats           = data.stats or {}
@@ -162,8 +163,13 @@ function CardHandler.new(data)
 	self._canvas         = nil
 	self._canvasDirty    = true
 
+	-- Activation feedback (triggered when card effect fires)
+	self._activateTimer  = 0        -- countdown in seconds (0 = inactive)
+	self._activateColor  = { 1, 1, 1 } -- tint color for the flash
+
 	-- Callbacks (user-assigned)
 	self.onClick         = nil -- function(card)
+	self.onRightClick    = nil -- function(card)
 	self.onHover         = nil -- function(card, isHovering)
 	self.onSelect        = nil -- function(card, isSelected)
 	self.onTooltip       = nil -- function(card, show, x, y)
@@ -227,6 +233,20 @@ function CardHandler:getRarityColor()
 end
 
 -------------------------------------------------------------------------------
+-- Activation feedback API
+-- Call this when the card's effect fires in combat to trigger a juicy reaction.
+-- color: { r, g, b } tint (defaults to white)
+-------------------------------------------------------------------------------
+function CardHandler:activate(color)
+	self._activateTimer = 0.75 -- duration of the effect in seconds
+	self._activateColor = color or { 1, 1, 1 }
+	-- Punch the scale up sharply – spring physics will ease it back
+	self.scaleVel       = self.scaleVel + 0.55
+	-- Also punch the card upward
+	self.liftYVel       = self.liftYVel + 18
+end
+
+-------------------------------------------------------------------------------
 -- Hit testing
 -------------------------------------------------------------------------------
 function CardHandler:containsPoint(px, py)
@@ -281,6 +301,9 @@ function CardHandler:mousepressed(mx, my, button)
 		self.selected = not self.selected
 		if self.onSelect then self.onSelect(self, self.selected) end
 		if self.onClick then self.onClick(self) end
+		return true -- consumed
+	elseif button == 2 and self:containsPoint(mx, my) then
+		if self.onRightClick then self.onRightClick(self) end
 		return true -- consumed
 	end
 	return false
@@ -347,8 +370,13 @@ function CardHandler:update(dt, mx, my)
 	self.x, self.xVel = springLerp(self.x, targetX, self.xVel, SPRING_STIFF, SPRING_DAMP, dt)
 	self.y, self.yVel = springLerp(self.y, targetY, self.yVel, SPRING_STIFF, SPRING_DAMP, dt)
 
+	-- Activation feedback timer
+	if self._activateTimer > 0 then
+		self._activateTimer = math.max(0, self._activateTimer - dt)
+	end
+
 	-- Rotation = base + tilt
-	self.rotation     = self.baseRotation + self.tiltX
+	self.rotation = self.baseRotation + self.tiltX
 end
 
 -------------------------------------------------------------------------------
@@ -508,6 +536,50 @@ function CardHandler:draw()
 			self.height * self.scale + glowRad * 2,
 			CORNER_RADIUS + 4, CORNER_RADIUS + 4
 		)
+	end
+
+	-- ── Activation overlay (when card's effect fires) ──────────────────────────
+	if self._activateTimer > 0 then
+		local ACTIVATE_DURATION = 0.75
+		local t = self._activateTimer / ACTIVATE_DURATION -- 1 → 0 as it fades
+		local ac = self._activateColor
+
+		love.graphics.push()
+		love.graphics.translate(self.x, self.y)
+		love.graphics.rotate(self.rotation)
+		love.graphics.scale(self.scale, self.scale)
+
+		local hw = self.width / 2
+		local hh = self.height / 2
+
+		-- Flash fill: bright at start, fades out
+		local flashAlpha = t * 0.55
+		love.graphics.setColor(ac[1], ac[2], ac[3], flashAlpha)
+		love.graphics.rectangle("fill", -hw, -hh, self.width, self.height, CORNER_RADIUS, CORNER_RADIUS)
+
+		-- Bright border ring that expands outward
+		local ringExpand = (1 - t) * 14 -- expands 0 → 14 px outward
+		local borderAlpha = t * 0.95
+		love.graphics.setColor(ac[1], ac[2], ac[3], borderAlpha)
+		love.graphics.setLineWidth(math.max(1, t * 4))
+		love.graphics.rectangle("line",
+			-hw - ringExpand, -hh - ringExpand,
+			self.width + ringExpand * 2,
+			self.height + ringExpand * 2,
+			CORNER_RADIUS + ringExpand, CORNER_RADIUS + ringExpand
+		)
+		love.graphics.setLineWidth(1)
+
+		-- Bright inner shimmer that sweeps across (left→right stripe)
+		local sweepX = (-hw) + (1 - t) * (self.width + 40) - 20
+		love.graphics.setColor(1, 1, 1, t * 0.30)
+		love.graphics.push()
+		love.graphics.translate(0, 0)
+		-- clip-ish: just draw a thin bright stripe
+		love.graphics.rectangle("fill", sweepX, -hh, 30, self.height)
+		love.graphics.pop()
+
+		love.graphics.pop()
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)

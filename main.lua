@@ -16,8 +16,8 @@ function love.load()
 	SceneManager:add("settings", setmetatable({}, SettingsScene))
 	SceneManager:add("credits", setmetatable({}, CreditsScene))
 	SceneManager:switch("menu")
-	music = love.audio.newSource("assets/audio/music/videoplayback.ogg", "stream")
-	music:play()
+	-- music = love.audio.newSource("assets/audio/music/videoplayback.ogg", "stream")
+	-- music:play()
 end
 
 function love.update(dt)

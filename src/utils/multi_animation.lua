@@ -172,7 +172,7 @@ function MultAnim.update(dt)
 				a.sparks = makeSparks(a.x, a.y)
 				a.ring   = { timer = 0 }
 				triggerShake(CFG.shakeAmplitude)
-				triggerFlash()
+				-- triggerFlash()
 			end
 		else
 			a.timer = a.timer + dt

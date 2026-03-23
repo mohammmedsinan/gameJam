@@ -12,7 +12,10 @@ end
 function SettingsScene:enter(prev)
     local w, h = love.graphics.getDimensions()
     self.buttons = {
-        { text = "RETURN", target = "menu", y = h * 0.8, w = 320, h = 55, scale = 1, hover = false, clickScale = 1 }
+        { id = "vol_down",   text = "<",                 target = "vol_down",   y = h * 0.4,  x_offset = -100, w = 50,  h = 55, scale = 1, hover = false, clickScale = 1 },
+        { id = "vol_up",     text = ">",                 target = "vol_up",     y = h * 0.4,  x_offset = 100,  w = 50,  h = 55, scale = 1, hover = false, clickScale = 1 },
+        { id = "fullscreen", text = "TOGGLE FULLSCREEN", target = "fullscreen", y = h * 0.55, x_offset = 0,    w = 320, h = 55, scale = 1, hover = false, clickScale = 1 },
+        { id = "return",     text = "RETURN",            target = "menu",       y = h * 0.8,  x_offset = 0,    w = 320, h = 55, scale = 1, hover = false, clickScale = 1 }
     }
 end
 
@@ -23,7 +26,7 @@ function SettingsScene:update(dt)
     local cx = w / 2
 
     for i, btn in ipairs(self.buttons) do
-        local bx = cx - btn.w / 2
+        local bx = cx - btn.w / 2 + (btn.x_offset or 0)
         local by = btn.y
         btn.hover = (mx >= bx and mx <= bx + btn.w and my >= by and my <= by + btn.h)
 
@@ -45,13 +48,18 @@ function SettingsScene:draw()
 
     if self.font then love.graphics.setFont(self.font) end
     love.graphics.setColor(0.5, 0.5, 0.5, 1)
-    love.graphics.printf("Volume: 100%\nFullscreen: Off\n(Placeholder settings)", 0, h * 0.4, w, "center")
+
+    local vol = math.floor(love.audio.getVolume() * 100 + 0.5)
+    love.graphics.printf(string.format("Volume: %d%%", vol), 0, h * 0.4 + 17, w, "center")
+
+    local isFullScreen = love.window.getFullscreen()
+    love.graphics.printf(string.format("Fullscreen: %s", isFullScreen and "On" or "Off"), 0, h * 0.55 - 30, w, "center")
 
     for i, btn in ipairs(self.buttons) do
         local totalScale = btn.scale * btn.clickScale
         local bw = btn.w * totalScale
         local bh = btn.h * totalScale
-        local bx = cx - bw / 2
+        local bx = cx - bw / 2 + (btn.x_offset or 0)
         local by = btn.y + (btn.h - bh) / 2
 
         if btn.hover then
@@ -83,7 +91,18 @@ function SettingsScene:mousereleased(x, y, button, istouch, presses)
         for i, btn in ipairs(self.buttons) do
             if btn.hover then
                 btn.clickScale = 1.0
-                if SceneManager then SceneManager:switch(btn.target, { kind = "fade", duration = 0.4 }) end
+                if btn.target == "menu" then
+                    if SceneManager then SceneManager:switch(btn.target, { kind = "fade", duration = 0.4 }) end
+                elseif btn.target == "vol_down" then
+                    local vol = love.audio.getVolume()
+                    love.audio.setVolume(math.max(0, vol - 0.1))
+                elseif btn.target == "vol_up" then
+                    local vol = love.audio.getVolume()
+                    love.audio.setVolume(math.min(1, vol + 0.1))
+                elseif btn.target == "fullscreen" then
+                    local isFullScreen = love.window.getFullscreen()
+                    love.window.setFullscreen(not isFullScreen)
+                end
             end
         end
     end
