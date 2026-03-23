@@ -1,5 +1,6 @@
 SceneManager = require("lib/SceneManager")
 love = require("love")
+Audio = require("src/utils/audio")
 
 -- Scenes ----------------------------------------------------------------------
 local MenuScene = require("src/scenes/MenuScene")
@@ -10,6 +11,7 @@ local CreditsScene = require("src/scenes/CreditsScene")
 
 
 function love.load()
+	Audio.load()
 	SceneManager:add("menu", setmetatable({}, MenuScene))
 	SceneManager:add("game", setmetatable({}, GameScene))
 	SceneManager:add("shop", setmetatable({}, Shop))

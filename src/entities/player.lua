@@ -19,7 +19,7 @@ function Player.new(bus, cardHand)
 		defence = 0,
 		-- xp = 0,
 		level = 1,
-		gold = 0, -- persistent gold; earned by defeating enemies
+		gold = 250,
 		drawX = 0,
 		drawY = 0,
 		inventory = {
@@ -51,13 +51,13 @@ end
 function Player:load()
 	local cardsContent = love.filesystem.read("src/entities/cards.json")
 	cardsData = json.decode(cardsContent)
-	if cardsData then
-		for _, card in ipairs(cardsData) do
-			if card.id == 2 or card.id == 3 then
-				self:addCardToInventory(card)
-			end
-		end
-	end
+	-- if cardsData then
+	-- 	for _, card in ipairs(cardsData) do
+	-- 		if card.id == 2 or card.id == 3 then
+	-- 			self:addCardToInventory(card)
+	-- 		end
+	-- 	end
+	-- end
 end
 
 function Player:addCardToInventory(cardData)

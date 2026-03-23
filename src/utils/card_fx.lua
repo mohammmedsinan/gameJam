@@ -32,7 +32,6 @@ local function randAngle() return love.math.random() * math.pi * 2 end
 local EFFECTS = {
     -------------------- ATTACK RESULTS --------------------
     great = {
-        flash   = { color = { 1, 0.85, 0.1, 0.40 }, decay = 7 },
         ring    = { color = { 1, 0.85, 0.1 }, count = 2, maxR = 110, speed = 260, life = 0.55 },
         sparks  = { color = { 1, 0.85, 0.1 }, count = 28, speed = { 200, 420 }, life = { 0.4, 0.75 }, size = { 2.5, 5 } },
         sparks2 = { color = { 1, 1, 1 }, count = 10, speed = { 80, 180 }, life = { 0.2, 0.45 }, size = { 1.5, 3 } },
@@ -126,9 +125,9 @@ local EFFECTS = {
 
 function CardFX.new()
     local self     = setmetatable({}, CardFX)
-    self.particles = {}  -- active spark/orb/wisp particles
-    self.rings     = {}  -- active expanding rings
-    self.cracks    = {}  -- active crack line sets
+    self.particles = {} -- active spark/orb/wisp particles
+    self.rings     = {} -- active expanding rings
+    self.cracks    = {} -- active crack line sets
     self._flash    = { alpha = 0, color = { 1, 1, 1 }, decay = 6 }
     return self
 end
@@ -145,17 +144,17 @@ local function spawnSparks(pool, def, x, y, isWisp)
         local life      = randRange(def.life[1], def.life[2])
         local size      = randRange(def.size[1], def.size[2])
         pool[#pool + 1] = {
-            kind = isWisp and "wisp" or "spark",
-            x = x + randRange(-12, 12),
-            y = y + randRange(-12, 12),
-            vx = math.cos(angle) * spd,
-            vy = math.sin(angle) * spd + rise,
-            life = life,
+            kind    = isWisp and "wisp" or "spark",
+            x       = x + randRange(-12, 12),
+            y       = y + randRange(-12, 12),
+            vx      = math.cos(angle) * spd,
+            vy      = math.sin(angle) * spd + rise,
+            life    = life,
             maxLife = life,
-            size = size,
-            r = c[1],
-            g = c[2],
-            b = c[3],
+            size    = size,
+            r       = c[1],
+            g       = c[2],
+            b       = c[3],
             gravity = gravity,
             seed    = love.math.random() * 10, -- for wisp sine
         }
@@ -333,8 +332,8 @@ function CardFX:draw()
     -- ── Rings ─────────────────────────────────────────────────────────────────
     love.graphics.setLineWidth(2.5)
     for _, rg in ipairs(self.rings) do
-        local t = 1 - rg.life / rg.maxLife   -- 0→1 as it expands
-        local a = (1 - t) * 0.85             -- fade out as it expands
+        local t = 1 - rg.life / rg.maxLife -- 0→1 as it expands
+        local a = (1 - t) * 0.85           -- fade out as it expands
         love.graphics.setColor(rg.cr, rg.cg, rg.cb, a)
         love.graphics.circle("line", rg.x, rg.y, rg.r)
     end

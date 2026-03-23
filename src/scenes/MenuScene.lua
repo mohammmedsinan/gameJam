@@ -45,7 +45,12 @@ function MenuScene:update(dt)
 		for i, btn in ipairs(self.buttons) do
 			local bx = cx - btn.w / 2
 			local by = btn.y
+			local wasHover = btn.hover
 			btn.hover = (mx >= bx and mx <= bx + btn.w and my >= by and my <= by + btn.h)
+
+			if btn.hover and not wasHover then
+				if Audio then Audio.playSFX("hover") end
+			end
 
 			local targetScale = btn.hover and 1.05 or 1.0
 			btn.scale = lerp(btn.scale, targetScale, dt * 10)
@@ -125,6 +130,7 @@ function MenuScene:mousepressed(x, y, button, istouch, presses)
 		for i, btn in ipairs(self.buttons) do
 			if btn.hover then
 				btn.clickScale = 0.95
+				if Audio then Audio.playSFX("click") end
 			end
 		end
 	end

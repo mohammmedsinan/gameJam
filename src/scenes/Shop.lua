@@ -192,6 +192,7 @@ end
 -- Load
 -------------------------------------------------------------------------------
 function Shop:load()
+	if Audio then Audio.playSFX("shop_door") end
 	computeLayout()
 
 	-- Load card data
@@ -222,6 +223,7 @@ function Shop:load()
 			-- Buying a card
 			if player and player.gold >= card.price then
 				player:spendGold(card.price)
+				if Audio then Audio.playSFX("card") end
 				cardHand:removeCard(card.id)
 				-- Remove from shopCards
 				for i, sc in ipairs(shopCards) do
@@ -233,6 +235,7 @@ function Shop:load()
 				player:addCardToInventory(card)
 				print("[Shop] Bought card: " .. card.name .. " for $" .. card.price)
 			else
+				if Audio then Audio.playSFX("hit_miss") end
 				print("[Shop] Not enough gold to buy: " .. card.name)
 			end
 		end,
@@ -263,6 +266,7 @@ function Shop:update(dt)
 
 	-- Update hovered button
 	local mx, my = love.mouse.getPosition()
+	local wasHoveredBtn = hoveredButton
 	hoveredButton = nil
 	for _, btn in ipairs(buttons) do
 		if btn.enabled and pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h) then
@@ -270,14 +274,21 @@ function Shop:update(dt)
 			break
 		end
 	end
+	if hoveredButton and hoveredButton ~= wasHoveredBtn then
+		if Audio then Audio.playSFX("hover") end
+	end
 
 	-- Check equipment hover
+	local wasHoveredEq = hoveredEquipIdx
 	hoveredEquipIdx = nil
 	for i, eq in ipairs(shopEquipment) do
 		local eqY = L.equipY + 40 + (i - 1) * 90
 		if pointInRect(mx, my, L.equipX + 10, eqY, L.equipW - 20, 80) then
 			hoveredEquipIdx = i
 		end
+	end
+	if hoveredEquipIdx and hoveredEquipIdx ~= wasHoveredEq then
+		if Audio then Audio.playSFX("hover") end
 	end
 end
 
@@ -503,10 +514,12 @@ function Shop:mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
 		if btn.enabled and pointInRect(x, y, btn.x, btn.y, btn.w, btn.h) then
 			if btn.id == "leave_shop" then
+				if Audio then Audio.playSFX("shop_door") end
 				SceneManager:switch("game", { kind = "fade", duration = 0.3 })
 			elseif btn.id == "reroll" and player and player.gold >= 10 then
 				player:spendGold(10)
 				refreshShop()
+				if Audio then Audio.playSFX("card") end
 				print("[Shop] Rerolled stock for $10")
 			elseif btn.id == "level_up" and player and player.gold >= levelUpCost then
 				player:spendGold(levelUpCost)
@@ -516,8 +529,10 @@ function Shop:mousepressed(x, y, button)
 					player.level = player.level + 1
 					xpToNext = math.floor(xpToNext * 1.4)
 					levelUpCost = math.floor(levelUpCost * 1.3)
+					if Audio then Audio.playSFX("level_up") end
 					print("[Shop] Leveled up to " .. player.level .. "!")
 				else
+					if Audio then Audio.playSFX("gain_gold") end
 					print("[Shop] Gained 25 XP!")
 				end
 			elseif btn.id:match("buy_eq_(%d+)") then
@@ -531,8 +546,14 @@ function Shop:mousepressed(x, y, button)
 					player:spendGold(eq.price)
 					player:equipItem(eq)
 					table.remove(shopEquipment, idx)
+					if Audio then Audio.playSFX("equip_buy") end
 					print("[Shop] Bought equipment: " .. eq.name)
+				else
+					if Audio then Audio.playSFX("hit_miss") end
 				end
+			end
+			if Audio and btn.id ~= "leave_shop" and not btn.id:match("buy_eq_") and btn.id ~= "level_up" and btn.id ~= "reroll" then
+				Audio.playSFX("click")
 			end
 			break
 		end

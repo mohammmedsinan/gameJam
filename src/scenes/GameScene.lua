@@ -38,6 +38,7 @@ function GameScene:load()
 			if player and card.price then
 				player:addGold(card.price)
 				player:removeCardFromInventory(card.id)
+				if Audio then Audio.playSFX("gain_gold") end
 				print("[Card Sold] " .. card.name .. " for $" .. card.price)
 			end
 		end,
@@ -71,6 +72,9 @@ function GameScene:load()
 	combat:setRefs(player, boss, shake, dmg, MultAnim)
 	combat:setFXRef(fx)
 	combat:setCardHandRef(cardHand)
+
+	-- ── Audio ────────────────────────────────────────────────────────────
+	if Audio then Audio.playMusic("game") end
 end
 
 function GameScene:update(dt)

@@ -28,7 +28,11 @@ function SettingsScene:update(dt)
     for i, btn in ipairs(self.buttons) do
         local bx = cx - btn.w / 2 + (btn.x_offset or 0)
         local by = btn.y
+        local wasHover = btn.hover
         btn.hover = (mx >= bx and mx <= bx + btn.w and my >= by and my <= by + btn.h)
+        if btn.hover and not wasHover then
+            if Audio then Audio.playSFX("hover") end
+        end
 
         btn.scale = lerp(btn.scale, btn.hover and 1.05 or 1.0, dt * 10)
         btn.clickScale = lerp(btn.clickScale, 1.0, dt * 15)
@@ -81,7 +85,10 @@ end
 function SettingsScene:mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         for i, btn in ipairs(self.buttons) do
-            if btn.hover then btn.clickScale = 0.95 end
+            if btn.hover then
+                btn.clickScale = 0.95
+                if Audio then Audio.playSFX("click") end
+            end
         end
     end
 end
